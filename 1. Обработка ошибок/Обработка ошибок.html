@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обработка ошибок</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/prism.css">
+    <script src="https://kit.fontawesome.com/b8991598f2.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1><span class="emoji">⚠️</span>Обработка ошибок</h1>
+        <p>Теоретический материал</p>
+    </header>
+
+    <nav class="nav">
+        <ul>
+            <li><a href="#исключения">🔹 Что такое исключения</a></li>
+            <li><a href="#встроенные-исключения">🔹 Встроенные исключения</a></li>
+            <li><a href="#try-except">🔹 try / except / else / finally</a></li>
+            <li><a href="#несколько-except">🔹 Несколько блоков except</a></li>
+            <li><a href="#raise">🔹 raise — генерация исключений</a></li>
+            <li><a href="#собственные-исключения">🔹 Собственные исключения</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+
+        <!-- ЧТО ТАКОЕ ИСКЛЮЧЕНИЯ -->
+        <section id="исключения" class="section">
+            <h2>Что такое исключения</h2>
+            <p>Исключение (exception) — это событие, которое возникает во время выполнения программы и нарушает её
+                нормальный ход. Когда Python сталкивается с ошибкой, он создаёт объект исключения и прерывает
+                выполнение текущего кода.</p>
+
+            <div class="important">
+                <h3>Зачем нужна обработка исключений?</h3>
+                <ol>
+                    <li>Предотвращает <strong>аварийное завершение</strong> программы при возникновении ошибок.</li>
+                    <li>Позволяет <strong>реагировать на ошибки</strong> и выполнять альтернативные действия.</li>
+                    <li>Делает код более <strong>надёжным и предсказуемым</strong>.</li>
+                    <li>Помогает выводить <strong>понятные сообщения об ошибках</strong> для пользователя.</li>
+                </ol>
+            </div>
+
+            <p>Пример программы, которая завершится с ошибкой без обработки исключений:</p>
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">number = int(input("Введите число: "))  # пользователь вводит "abc"
+print(f"Вы ввели: {number}")
+
+# ValueError: invalid literal for int() with base 10: 'abc'</code></pre>
+            </div>
+        </section>
+
+        <!-- ВСТРОЕННЫЕ ИСКЛЮЧЕНИЯ -->
+        <section id="встроенные-исключения" class="section">
+            <h2>Встроенные исключения</h2>
+            <p>Python содержит множество встроенных классов исключений. Каждый из них отвечает за определённый тип
+                ошибки. Все исключения наследуются от базового класса <code>BaseException</code>.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Исключение</th>
+                        <th>Описание</th>
+                        <th>Пример</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><code>ValueError</code></td>
+                        <td>Неверное значение аргумента (тип правильный, значение нет)</td>
+                        <td><code>int("abc")</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>TypeError</code></td>
+                        <td>Операция применена к объекту неподходящего типа</td>
+                        <td><code>"5" + 5</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>KeyError</code></td>
+                        <td>Обращение к несуществующему ключу словаря</td>
+                        <td><code>d["key"]</code> при отсутствии <code>"key"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>IndexError</code></td>
+                        <td>Обращение к индексу, выходящему за границы последовательности</td>
+                        <td><code>[1, 2, 3][10]</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>AttributeError</code></td>
+                        <td>Обращение к несуществующему атрибуту объекта</td>
+                        <td><code>"text".sort()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>NameError</code></td>
+                        <td>Обращение к неопределённой переменной</td>
+                        <td><code>print(x)</code> без объявления <code>x</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>ZeroDivisionError</code></td>
+                        <td>Деление на ноль</td>
+                        <td><code>10 / 0</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>FileNotFoundError</code></td>
+                        <td>Файл или директория не найдены</td>
+                        <td><code>open("file.txt")</code> при отсутствии файла</td>
+                    </tr>
+                    <tr>
+                        <td><code>ImportError</code></td>
+                        <td>Ошибка при импорте модуля</td>
+                        <td><code>import несуществующий_модуль</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>StopIteration</code></td>
+                        <td>Итератор исчерпан</td>
+                        <td><code>next(iter([]))</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>RuntimeError</code></td>
+                        <td>Общая ошибка во время выполнения, не попадающая в другие категории</td>
+                        <td>Нарушение глубины рекурсии</td>
+                    </tr>
+                    <tr>
+                        <td><code>OverflowError</code></td>
+                        <td>Результат операции слишком велик для представления</td>
+                        <td><code>math.exp(1000)</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>MemoryError</code></td>
+                        <td>Недостаточно памяти для выполнения операции</td>
+                        <td>Создание очень большого списка</td>
+                    </tr>
+                    <tr>
+                        <td><code>RecursionError</code></td>
+                        <td>Превышена максимальная глубина рекурсии</td>
+                        <td>Бесконечная рекурсия</td>
+                    </tr>
+                    <tr>
+                        <td><code>OSError</code></td>
+                        <td>Ошибка операционной системы (файлы, сеть и т.д.)</td>
+                        <td>Отказ в доступе к файлу</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры возникновения исключений:</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">int("hello")        # ValueError
+"text" + 5          # TypeError
+{"a": 1}["b"]       # KeyError
+[1, 2, 3][99]       # IndexError
+10 / 0              # ZeroDivisionError
+print(undefined_var) # NameError</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Иерархия исключений</h4>
+                <p>Все исключения наследуются от <code>BaseException</code>. Большинство стандартных исключений
+                    наследуются от <code>Exception</code>. Это важно при обработке: если перехватить
+                    <code>Exception</code>, то будут пойманы все дочерние исключения.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">BaseException
+ ├── SystemExit
+ ├── KeyboardInterrupt
+ └── Exception
+      ├── ValueError
+      ├── TypeError
+      ├── KeyError
+      │    └── IndexError (косвенно через LookupError)
+      ├── ZeroDivisionError
+      └── ... (и многие другие)</code></pre>
+            </div>
+        </section>
+
+        <!-- TRY / EXCEPT / ELSE / FINALLY -->
+        <section id="try-except" class="section">
+            <h2>try / except / else / finally</h2>
+            <p>Для обработки исключений в Python используется конструкция <code>try / except</code>. Она позволяет
+                «поймать» исключение и выполнить альтернативный код вместо аварийного завершения программы.</p>
+
+            <div class="syntax-block">
+                <pre><code>try:
+    # код, который может вызвать исключение
+except ТипИсключения:
+    # код, выполняемый при возникновении исключения
+else:
+    # код, выполняемый если исключений НЕ было
+finally:
+    # код, выполняемый ВСЕГДА (и при ошибке, и без)</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Блоки конструкции</h3>
+                <ul>
+                    <li><strong>try</strong> — обязательный блок. Содержит код, который может вызвать исключение.</li>
+                    <li><strong>except</strong> — обязательный (хотя бы один). Перехватывает указанное исключение и
+                        выполняет код обработки ошибки.</li>
+                    <li><strong>else</strong> — необязательный. Выполняется только если в блоке <code>try</code>
+                        исключений <strong>не возникло</strong>.</li>
+                    <li><strong>finally</strong> — необязательный. Выполняется <strong>всегда</strong>, независимо от
+                        того, было ли исключение. Используется для освобождения ресурсов.</li>
+                </ul>
+            </div>
+
+            <div class="example-box">
+                <h4>Простой пример: обработка ввода пользователя</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">try:
+    number = int(input("Введите число: "))
+    result = 100 / number
+except ValueError:
+    print("Ошибка: введите целое число!")
+except ZeroDivisionError:
+    print("Ошибка: нельзя делить на ноль!")
+else:
+    print(f"Результат: {result}")
+finally:
+    print("Программа завершена.")</code></pre>
+            </div>
+
+            <h3>Получение информации об исключении</h3>
+            <p>С помощью ключевого слова <code>as</code> можно получить объект исключения и вывести его сообщение:</p>
+
+            <div class="function-block">
+                <div class="function-signature">except ТипИсключения as e:</div>
+                <div class="function-description">Сохраняет объект исключения в переменную <code>e</code>. Можно
+                    использовать <code>str(e)</code> или просто <code>e</code> для получения сообщения об ошибке.
+                </div>
+            </div>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">try:
+    data = {"name": "Alice"}
+    print(data["age"])
+except KeyError as e:
+    print(f"Ключ не найден: {e}")
+    # Ключ не найден: 'age'</code></pre>
+            </div>
+
+            <h3>Перехват любого исключения</h3>
+            <p>Можно использовать <code>Exception</code> для перехвата любого стандартного исключения. Это удобно,
+                но следует применять осторожно — лучше указывать конкретные типы исключений.</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">try:
+    result = 10 / 0
+except Exception as e:
+    print(f"Произошла ошибка: {type(e).__name__} — {e}")
+    # Произошла ошибка: ZeroDivisionError — division by zero</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Пример с блоком else и finally</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def read_file(filename):
+    try:
+        file = open(filename, "r")
+        content = file.read()
+    except FileNotFoundError:
+        print(f"Файл '{filename}' не найден.")
+        content = None
+    else:
+        print("Файл успешно прочитан.")
+        file.close()
+    finally:
+        print("Операция завершена.")
+    return content
+
+read_file("data.txt")</code></pre>
+            </div>
+        </section>
+
+        <!-- НЕСКОЛЬКО БЛОКОВ EXCEPT -->
+        <section id="несколько-except" class="section">
+            <h2>Несколько блоков except</h2>
+            <p>Один блок <code>try</code> может содержать несколько блоков <code>except</code> для обработки
+                различных типов исключений по-разному.</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">def safe_divide(a, b):
+    try:
+        result = a / b
+    except TypeError:
+        print("Ошибка: оба аргумента должны быть числами.")
+    except ZeroDivisionError:
+        print("Ошибка: делитель не может быть равен нулю.")
+    else:
+        return result
+
+print(safe_divide(10, 2))    # 5.0
+print(safe_divide(10, 0))    # Ошибка: делитель не может быть равен нулю.
+print(safe_divide("10", 2))  # Ошибка: оба аргумента должны быть числами.</code></pre>
+            </div>
+
+            <h3>Перехват нескольких исключений в одном блоке</h3>
+            <p>Если для нескольких типов исключений нужна одинаковая обработка, их можно объединить в кортеж:</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">try:
+    value = int(input("Введите число: "))
+    result = 100 / value
+except (ValueError, ZeroDivisionError) as e:
+    print(f"Ошибка ввода: {e}")</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Порядок блоков except важен</h4>
+                <p>Блоки <code>except</code> проверяются сверху вниз. Следует размещать <strong>более конкретные</strong>
+                    исключения выше, а <strong>более общие</strong> — ниже. Иначе общий обработчик перехватит исключение
+                    до того, как до него дойдёт конкретный.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">try:
+    result = int("abc") / 0
+except ValueError:
+    print("Ошибка значения")      # более конкретное — выше
+except ZeroDivisionError:
+    print("Деление на ноль")      # более конкретное — выше
+except Exception:
+    print("Общая ошибка")         # более общее — ниже</code></pre>
+            </div>
+        </section>
+
+        <!-- RAISE -->
+        <section id="raise" class="section">
+            <h2>raise — генерация исключений</h2>
+            <p>Иногда нужно самостоятельно вызвать исключение — например, при проверке входных данных в функции.
+                Для этого используется ключевое слово <code>raise</code>.</p>
+
+            <div class="function-block">
+                <div class="function-signature">raise ТипИсключения("сообщение")</div>
+                <div class="function-description">Генерирует исключение указанного типа с заданным сообщением.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Пример: валидация данных</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def set_age(age):
+    if not isinstance(age, int):
+        raise TypeError("Возраст должен быть целым числом.")
+    if age < 0 or age > 150:
+        raise ValueError("Возраст должен быть в диапазоне от 0 до 150.")
+    return age
+
+try:
+    set_age(-5)
+except ValueError as e:
+    print(f"Ошибка: {e}")
+# Ошибка: Возраст должен быть в диапазоне от 0 до 150.</code></pre>
+            </div>
+
+            <h3>Повторная генерация исключения (re-raise)</h3>
+            <p>Внутри блока <code>except</code> можно использовать <code>raise</code> без аргументов, чтобы
+                пробросить текущее исключение дальше — после его частичной обработки:</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">def process_data(data):
+    try:
+        result = 100 / data
+    except ZeroDivisionError:
+        print("Логируем ошибку деления на ноль...")
+        raise  # пробрасываем исключение дальше
+
+try:
+    process_data(0)
+except ZeroDivisionError:
+    print("Исключение поймано в вызывающем коде.")</code></pre>
+            </div>
+
+            <h3>raise ... from ...</h3>
+            <p>Можно указать причину (цепочку исключений) с помощью <code>raise ... from ...</code>:</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">try:
+    int("abc")
+except ValueError as e:
+    raise RuntimeError("Не удалось преобразовать данные.") from e</code></pre>
+            </div>
+        </section>
+
+        <!-- СОБСТВЕННЫЕ ИСКЛЮЧЕНИЯ -->
+        <section id="собственные-исключения" class="section">
+            <h2>Собственные исключения</h2>
+            <p>В Python можно создавать собственные классы исключений. Для этого нужно создать класс, наследующийся
+                от <code>Exception</code> (или другого подходящего исключения).</p>
+
+            <div class="important">
+                <h3>Зачем создавать собственные исключения?</h3>
+                <ul>
+                    <li>Делают код более <strong>читаемым</strong> — понятно, что именно пошло не так.</li>
+                    <li>Позволяют <strong>разделить логику обработки</strong> разных типов ошибок.</li>
+                    <li>Удобны при написании <strong>библиотек и модулей</strong>.</li>
+                </ul>
+            </div>
+
+            <div class="example-box">
+                <h4>Базовый вариант — минимальный класс исключения</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class NegativeValueError(Exception):
+    pass
+
+def square_root(n):
+    if n < 0:
+        raise NegativeValueError("Нельзя извлечь корень из отрицательного числа.")
+    return n ** 0.5
+
+try:
+    print(square_root(-4))
+except NegativeValueError as e:
+    print(f"Ошибка: {e}")
+# Ошибка: Нельзя извлечь корень из отрицательного числа.</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Расширенный вариант — исключение с дополнительными данными</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class InsufficientFundsError(Exception):
+    def __init__(self, balance, amount):
+        self.balance = balance
+        self.amount = amount
+        super().__init__(
+            f"Недостаточно средств. Баланс: {balance}, требуется: {amount}."
+        )
+
+class BankAccount:
+    def __init__(self, balance):
+        self.balance = balance
+
+    def withdraw(self, amount):
+        if amount > self.balance:
+            raise InsufficientFundsError(self.balance, amount)
+        self.balance -= amount
+        return amount
+
+account = BankAccount(100)
+
+try:
+    account.withdraw(200)
+except InsufficientFundsError as e:
+    print(f"Ошибка: {e}")
+    print(f"Текущий баланс: {e.balance}")
+# Ошибка: Недостаточно средств. Баланс: 100, требуется: 200.
+# Текущий баланс: 100</code></pre>
+            </div>
+
+            <h3>Иерархия собственных исключений</h3>
+            <p>В больших проектах удобно создавать базовое исключение приложения, от которого наследуются все
+                остальные. Это позволяет ловить все ошибки приложения одним <code>except</code>:</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">class AppError(Exception):
+    """Базовое исключение приложения."""
+    pass
+
+class DatabaseError(AppError):
+    """Ошибки при работе с базой данных."""
+    pass
+
+class NetworkError(AppError):
+    """Ошибки сети."""
+    pass
+
+class TimeoutError(NetworkError):
+    """Превышено время ожидания."""
+    pass
+
+try:
+    raise TimeoutError("Сервер не отвечает.")
+except AppError as e:
+    print(f"Ошибка приложения: {e}")
+    print(f"Тип: {type(e).__name__}")
+# Ошибка приложения: Сервер не отвечает.
+# Тип: TimeoutError</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Рекомендации по именованию</h4>
+                <p>Имена собственных исключений принято заканчивать на <strong>Error</strong> или
+                    <strong>Exception</strong>, чтобы сразу было понятно, что это класс исключения.
+                    Например: <code>ValidationError</code>, <code>AuthError</code>, <code>ParseException</code>.</p>
+            </div>
+        </section>
+
+    </main>
+</div>
+<script src="../assets/js/prism.js"></script>
+<script src="../assets/js/script.js"></script>
+</body>
+</html>
