@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Функциональное программирование</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/prism.css">
+    <script src="https://kit.fontawesome.com/b8991598f2.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1><span class="emoji">⚙️</span>Функциональное программирование</h1>
+        <p>Теоретический материал</p>
+    </header>
+
+    <nav class="nav">
+        <ul>
+            <li><a href="#lambda">🔹 Lambda-функции</a></li>
+            <li><a href="#map-filter-reduce">🔹 map, filter, reduce</a></li>
+            <li><a href="#comprehensions">🔹 Генераторы словарей и множеств</a></li>
+            <li><a href="#generators">🔹 Генераторы и yield</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+
+        <!-- LAMBDA-ФУНКЦИИ -->
+        <section id="lambda" class="section">
+            <h2>Lambda-функции</h2>
+            <p>Lambda-функция — это анонимная функция, объявляемая без имени с помощью ключевого слова
+                <code>lambda</code>. Она может принимать любое количество аргументов, но содержит только
+                одно выражение, результат которого и является возвращаемым значением.</p>
+
+            <div class="syntax-block">
+                <pre><code>lambda аргументы: выражение</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Когда использовать lambda?</h3>
+                <ul>
+                    <li>Когда функция нужна <strong>один раз</strong> и не требует имени.</li>
+                    <li>Как аргумент функций высшего порядка: <code>map()</code>, <code>filter()</code>,
+                        <code>sorted()</code> и т.д.</li>
+                    <li>Когда логика <strong>проста и умещается в одну строку</strong>.</li>
+                </ul>
+            </div>
+
+            <div class="example-box">
+                <h4>Сравнение обычной функции и lambda</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def square(x):
+    return x ** 2
+
+square_lambda = lambda x: x ** 2
+
+print(square(5))        # 25
+print(square_lambda(5)) # 25</code></pre>
+            </div>
+
+            <h3>Lambda с несколькими аргументами</h3>
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">add = lambda a, b: a + b
+multiply = lambda a, b, c: a * b * c
+
+print(add(3, 4))          # 7
+print(multiply(2, 3, 4))  # 24</code></pre>
+            </div>
+
+            <h3>Lambda в сортировке</h3>
+            <p>Чаще всего lambda применяется совместно с функцией <code>sorted()</code> для задания
+                ключа сортировки:</p>
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">students = [
+    {"name": "Alice", "grade": 88},
+    {"name": "Bob", "grade": 95},
+    {"name": "Charlie", "grade": 72},
+]
+
+sorted_students = sorted(students, key=lambda s: s["grade"], reverse=True)
+
+for s in sorted_students:
+    print(s["name"], s["grade"])
+# Bob 95
+# Alice 88
+# Charlie 72</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Ограничения lambda</h4>
+                <p>Lambda может содержать только <strong>одно выражение</strong>. В ней нельзя использовать
+                    инструкции: <code>if/else</code> в виде блоков, циклы, присваивания и т.д. Для сложной
+                    логики следует использовать обычные функции через <code>def</code>.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">classify = lambda x: "положительное" if x > 0 else ("ноль" if x == 0 else "отрицательное")
+
+print(classify(5))   # положительное
+print(classify(0))   # ноль
+print(classify(-3))  # отрицательное</code></pre>
+            </div>
+        </section>
+
+        <!-- MAP, FILTER, REDUCE -->
+        <section id="map-filter-reduce" class="section">
+            <h2>map, filter, reduce</h2>
+            <p>Это функции высшего порядка — они принимают другую функцию в качестве аргумента и применяют
+                её к элементам последовательности. Они являются основой функционального стиля программирования
+                в Python.</p>
+
+            <!-- MAP -->
+            <h3>map()</h3>
+
+            <div class="function-block">
+                <div class="function-signature">map(функция, итерируемый_объект, ...)</div>
+                <div class="function-description">Применяет указанную функцию к каждому элементу
+                    итерируемого объекта и возвращает итератор с результатами. Можно передать несколько
+                    итерируемых объектов — тогда функция должна принимать соответствующее число аргументов.
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры map()</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">numbers = [1, 2, 3, 4, 5]
+
+squares = list(map(lambda x: x ** 2, numbers))
+print(squares)  # [1, 4, 9, 16, 25]
+
+words = ["hello", "world", "python"]
+upper_words = list(map(str.upper, words))
+print(upper_words)  # ['HELLO', 'WORLD', 'PYTHON']
+
+a = [1, 2, 3]
+b = [10, 20, 30]
+sums = list(map(lambda x, y: x + y, a, b))
+print(sums)  # [11, 22, 33]</code></pre>
+            </div>
+
+            <!-- FILTER -->
+            <h3>filter()</h3>
+
+            <div class="function-block">
+                <div class="function-signature">filter(функция, итерируемый_объект)</div>
+                <div class="function-description">Фильтрует элементы итерируемого объекта, оставляя только
+                    те, для которых функция возвращает <code>True</code>. Если вместо функции передать
+                    <code>None</code>, будут отфильтрованы ложные значения.
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры filter()</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">numbers = [1, -2, 3, -4, 5, 0, -6]
+
+positives = list(filter(lambda x: x > 0, numbers))
+print(positives)  # [1, 3, 5]
+
+evens = list(filter(lambda x: x % 2 == 0, range(1, 11)))
+print(evens)  # [2, 4, 6, 8, 10]
+
+mixed = [0, 1, "", "hello", None, [], [1, 2], False, True]
+truthy = list(filter(None, mixed))
+print(truthy)  # [1, 'hello', [1, 2], True]</code></pre>
+            </div>
+
+            <!-- REDUCE -->
+            <h3>reduce()</h3>
+
+            <div class="function-block">
+                <div class="function-signature">functools.reduce(функция, итерируемый_объект[, начальное_значение])</div>
+                <div class="function-description">Последовательно применяет функцию к элементам,
+                    «сворачивая» последовательность в одно значение. Функция принимает два аргумента:
+                    накопленный результат и текущий элемент. Находится в модуле <code>functools</code>.
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры reduce()</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import reduce
+
+numbers = [1, 2, 3, 4, 5]
+
+total = reduce(lambda acc, x: acc + x, numbers)
+print(total)  # 15  (1+2+3+4+5)
+
+product = reduce(lambda acc, x: acc * x, numbers)
+print(product)  # 120  (1*2*3*4*5)
+
+max_val = reduce(lambda a, b: a if a > b else b, numbers)
+print(max_val)  # 5
+
+total_with_start = reduce(lambda acc, x: acc + x, numbers, 100)
+print(total_with_start)  # 115  (100+1+2+3+4+5)</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Как работает reduce() шаг за шагом</h4>
+                <p>Для <code>reduce(lambda acc, x: acc + x, [1, 2, 3, 4, 5])</code>:</p>
+                <pre class="line-numbers match-braces"><code class="language-python">шаг 1: acc=1,  x=2  → 1 + 2  = 3
+шаг 2: acc=3,  x=3  → 3 + 3  = 6
+шаг 3: acc=6,  x=4  → 6 + 4  = 10
+шаг 4: acc=10, x=5  → 10 + 5 = 15
+результат: 15</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Сравнение map, filter, reduce</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Функция</th>
+                            <th>Что делает</th>
+                            <th>Возвращает</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td><code>map(f, seq)</code></td>
+                            <td>Применяет <code>f</code> к каждому элементу</td>
+                            <td>Итератор с преобразованными значениями</td>
+                        </tr>
+                        <tr>
+                            <td><code>filter(f, seq)</code></td>
+                            <td>Отбирает элементы, для которых <code>f</code> истинна</td>
+                            <td>Итератор с отфильтрованными значениями</td>
+                        </tr>
+                        <tr>
+                            <td><code>reduce(f, seq)</code></td>
+                            <td>Сворачивает последовательность в одно значение</td>
+                            <td>Одно значение</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMPREHENSIONS -->
+        <section id="comprehensions" class="section">
+            <h2>Генераторы словарей и множеств (Comprehensions)</h2>
+            <p>Comprehensions — краткий и выразительный синтаксис для создания коллекций на основе
+                существующих. В Python существуют comprehensions для списков, словарей и множеств.</p>
+
+            <!-- LIST COMPREHENSION -->
+            <h3>Генератор списков (List Comprehension)</h3>
+
+            <div class="syntax-block">
+                <pre><code>[выражение for элемент in итерируемый_объект if условие]</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры генераторов списков</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">squares = [x ** 2 for x in range(1, 6)]
+print(squares)  # [1, 4, 9, 16, 25]
+
+evens = [x for x in range(20) if x % 2 == 0]
+print(evens)  # [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+
+words = ["hello", "world", "python"]
+upper = [w.upper() for w in words if len(w) > 4]
+print(upper)  # ['HELLO', 'WORLD', 'PYTHON']
+
+pairs = [(x, y) for x in range(1, 4) for y in range(1, 4) if x != y]
+print(pairs)
+# [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)]</code></pre>
+            </div>
+
+            <!-- DICT COMPREHENSION -->
+            <h3>Генератор словарей (Dict Comprehension)</h3>
+
+            <div class="syntax-block">
+                <pre><code>{ключ: значение for элемент in итерируемый_объект if условие}</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры генераторов словарей</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">squares_dict = {x: x ** 2 for x in range(1, 6)}
+print(squares_dict)  # {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+
+words = ["apple", "banana", "cherry"]
+lengths = {word: len(word) for word in words}
+print(lengths)  # {'apple': 5, 'banana': 6, 'cherry': 6}
+
+original = {"a": 1, "b": 2, "c": 3, "d": 4}
+filtered = {k: v for k, v in original.items() if v > 2}
+print(filtered)  # {'c': 3, 'd': 4}
+
+inverted = {v: k for k, v in original.items()}
+print(inverted)  # {1: 'a', 2: 'b', 3: 'c', 4: 'd'}</code></pre>
+            </div>
+
+            <!-- SET COMPREHENSION -->
+            <h3>Генератор множеств (Set Comprehension)</h3>
+
+            <div class="syntax-block">
+                <pre><code>{выражение for элемент in итерируемый_объект if условие}</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Отличие от генератора словарей</h3>
+                <p>Синтаксис похож на dict comprehension, но без двоеточия <code>ключ: значение</code> —
+                    только одно выражение. Множество автоматически удаляет дубликаты и не сохраняет порядок.</p>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры генераторов множеств</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">numbers = [1, 2, 2, 3, 3, 3, 4, 5, 5]
+unique_squares = {x ** 2 for x in numbers}
+print(unique_squares)  # {1, 4, 9, 16, 25}
+
+words = ["hello", "world", "hi", "python", "py"]
+short_upper = {w.upper() for w in words if len(w) <= 3}
+print(short_upper)  # {'HI', 'PY'}
+
+sentence = "the quick brown fox jumps over the lazy dog"
+unique_chars = {ch for ch in sentence if ch != " "}
+print(len(unique_chars))  # 26 (все буквы алфавита)</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Вложенные comprehensions</h4>
+                <p>Comprehensions можно вкладывать — например, создать матрицу или «расплющить» (flatten) список списков:</p>
+                <pre class="line-numbers match-braces"><code class="language-python">matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+flat = [num for row in matrix for num in row]
+print(flat)  # [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+transposed = [[row[i] for row in matrix] for i in range(3)]
+print(transposed)  # [[1, 4, 7], [2, 5, 8], [3, 6, 9]]</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Сравнение comprehensions</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Тип</th>
+                            <th>Синтаксис</th>
+                            <th>Результат</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>List</td>
+                            <td><code>[expr for x in it]</code></td>
+                            <td>Список, сохраняет порядок и дубликаты</td>
+                        </tr>
+                        <tr>
+                            <td>Dict</td>
+                            <td><code>{k: v for x in it}</code></td>
+                            <td>Словарь, ключи уникальны</td>
+                        </tr>
+                        <tr>
+                            <td>Set</td>
+                            <td><code>{expr for x in it}</code></td>
+                            <td>Множество, уникальные элементы без порядка</td>
+                        </tr>
+                        <tr>
+                            <td>Generator</td>
+                            <td><code>(expr for x in it)</code></td>
+                            <td>Итератор, ленивые вычисления</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ГЕНЕРАТОРЫ И YIELD -->
+        <section id="generators" class="section">
+            <h2>Генераторы и yield</h2>
+            <p>Генератор — это специальная функция, которая возвращает значения по одному, приостанавливая
+                своё выполнение после каждого возвращённого значения. В отличие от обычной функции, которая
+                возвращает всё сразу через <code>return</code>, генератор использует ключевое слово
+                <code>yield</code> и является <strong>ленивым</strong> (lazy) — вычисляет значения только
+                тогда, когда они запрашиваются.</p>
+
+            <div class="important">
+                <h3>Зачем нужны генераторы?</h3>
+                <ol>
+                    <li><strong>Экономия памяти</strong> — значения генерируются по одному, а не хранятся все
+                        сразу в памяти.</li>
+                    <li><strong>Работа с бесконечными последовательностями</strong> — можно описать
+                        бесконечный ряд и брать из него столько элементов, сколько нужно.</li>
+                    <li><strong>Конвейерная обработка данных</strong> — несколько генераторов можно
+                        соединить в цепочку.</li>
+                </ol>
+            </div>
+
+            <h3>Ключевое слово yield</h3>
+            <p>Когда Python встречает <code>yield</code>, он возвращает значение вызывающему коду и
+                <strong>приостанавливает</strong> выполнение функции, сохраняя её состояние. При следующем
+                запросе выполнение продолжается с того же места.</p>
+
+            <div class="example-box">
+                <h4>Простой генератор</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def count_up(n):
+    i = 1
+    while i <= n:
+        yield i
+        i += 1
+
+gen = count_up(5)
+print(next(gen))  # 1
+print(next(gen))  # 2
+print(next(gen))  # 3
+
+for num in count_up(5):
+    print(num, end=" ")
+# 1 2 3 4 5</code></pre>
+            </div>
+
+            <h3>Сравнение функции и генератора</h3>
+            <div class="example-box">
+                <h4>Обычная функция — хранит всё в памяти</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def squares_list(n):
+    result = []
+    for i in range(n):
+        result.append(i ** 2)
+    return result
+
+print(squares_list(5))  # [0, 1, 4, 9, 16]</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Генератор — вычисляет по одному</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def squares_gen(n):
+    for i in range(n):
+        yield i ** 2
+
+gen = squares_gen(5)
+print(list(gen))  # [0, 1, 4, 9, 16]
+
+for sq in squares_gen(1_000_000):
+    if sq > 100:
+        break
+    print(sq, end=" ")
+# 0 1 4 9 16 25 36 49 64 81 100</code></pre>
+            </div>
+
+            <h3>Генераторное выражение</h3>
+            <p>Аналог list comprehension, но создаёт генератор вместо списка — использует круглые скобки:</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">list_comp = [x ** 2 for x in range(10)]
+gen_expr  = (x ** 2 for x in range(10))
+
+print(type(list_comp))  # <class 'list'>
+print(type(gen_expr))   # <class 'generator'>
+
+print(sum(x ** 2 for x in range(1_000_000)))  # 333332833333500000
+</code></pre>
+            </div>
+
+            <h3>yield from</h3>
+            <p>Ключевое слово <code>yield from</code> позволяет делегировать генерацию другому
+                итерируемому объекту или генератору:</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">def chain(*iterables):
+    for it in iterables:
+        yield from it
+
+result = list(chain([1, 2, 3], "abc", range(4, 7)))
+print(result)  # [1, 2, 3, 'a', 'b', 'c', 4, 5, 6]</code></pre>
+            </div>
+
+            <h3>Бесконечные генераторы</h3>
+            <div class="example-box">
+                <h4>Бесконечная последовательность Фибоначчи</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def fibonacci():
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+fib = fibonacci()
+first_10 = [next(fib) for _ in range(10)]
+print(first_10)  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Конвейер из генераторов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def read_numbers(data):
+    for n in data:
+        yield n
+
+def filter_even(numbers):
+    for n in numbers:
+        if n % 2 == 0:
+            yield n
+
+def square(numbers):
+    for n in numbers:
+        yield n ** 2
+
+data = range(1, 11)
+pipeline = square(filter_even(read_numbers(data)))
+
+print(list(pipeline))  # [4, 16, 36, 64, 100]</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Протокол итератора</h4>
+                <p>Генераторы автоматически реализуют <strong>протокол итератора</strong>: у них есть методы
+                    <code>__iter__()</code> и <code>__next__()</code>. Когда значения заканчиваются,
+                    автоматически возбуждается исключение <code>StopIteration</code>.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">def simple():
+    yield 1
+    yield 2
+
+gen = simple()
+print(next(gen))  # 1
+print(next(gen))  # 2
+print(next(gen))  # StopIteration</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Когда использовать генераторы вместо списков?</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Ситуация</th>
+                            <th>Список</th>
+                            <th>Генератор</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Нужен многократный проход</td>
+                            <td>✅ Да</td>
+                            <td>❌ Нет (одноразовый)</td>
+                        </tr>
+                        <tr>
+                            <td>Нужен доступ по индексу</td>
+                            <td>✅ Да</td>
+                            <td>❌ Нет</td>
+                        </tr>
+                        <tr>
+                            <td>Большой или бесконечный набор данных</td>
+                            <td>❌ Много памяти</td>
+                            <td>✅ Ленивые вычисления</td>
+                        </tr>
+                        <tr>
+                            <td>Нужна только итерация (for, sum, max)</td>
+                            <td>✅ Работает</td>
+                            <td>✅ Эффективнее</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+<script src="../assets/js/prism.js"></script>
+<script src="../assets/js/script.js"></script>
+</body>
+</html>
