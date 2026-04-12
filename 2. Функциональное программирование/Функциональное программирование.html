@@ -22,6 +22,10 @@
             <li><a href="#map-filter-reduce">🔹 map, filter, reduce</a></li>
             <li><a href="#comprehensions">🔹 Генераторы словарей и множеств</a></li>
             <li><a href="#generators">🔹 Генераторы и yield</a></li>
+            <li><a href="#iterators">🔹 Итераторы</a></li>
+            <li><a href="#builtin-iter-funcs">🔹 Встроенные функции для итерируемых объектов</a></li>
+            <li><a href="#functools">🔹 Модуль functools</a></li>
+            <li><a href="#itertools">🔹 Модуль itertools</a></li>
         </ul>
     </nav>
 
@@ -546,6 +550,591 @@ print(next(gen))  # StopIteration</code></pre>
                             <td>Нужна только итерация (for, sum, max)</td>
                             <td>✅ Работает</td>
                             <td>✅ Эффективнее</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ИТЕРАТОРЫ -->
+        <section id="iterators" class="section">
+            <h2>Итераторы</h2>
+            <p>Итератор — это объект, реализующий <strong>протокол итератора</strong>: методы
+                <code>__iter__()</code> и <code>__next__()</code>. Он позволяет последовательно
+                перебирать элементы коллекции, не загружая их все в память сразу.</p>
+
+            <div class="important">
+                <h3>Iterable vs Iterator</h3>
+                <ul>
+                    <li><strong>Iterable (итерируемый объект)</strong> — объект, у которого есть метод
+                        <code>__iter__()</code>, возвращающий итератор. Примеры: <code>list</code>,
+                        <code>str</code>, <code>dict</code>, <code>range</code>.</li>
+                    <li><strong>Iterator (итератор)</strong> — объект с методами <code>__iter__()</code>
+                        и <code>__next__()</code>. Каждый вызов <code>__next__()</code> возвращает
+                        следующий элемент. Когда элементы заканчиваются — выбрасывает
+                        <code>StopIteration</code>.</li>
+                </ul>
+            </div>
+
+            <div class="note">
+                <h4>Как работает цикл for «под капотом»</h4>
+                <p>Каждый раз, когда вы пишете <code>for x in obj</code>, Python автоматически
+                    вызывает <code>iter(obj)</code>, а затем многократно вызывает
+                    <code>next()</code> до исключения <code>StopIteration</code>.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">numbers = [1, 2, 3]
+
+it = iter(numbers)
+print(next(it))  # 1
+print(next(it))  # 2
+print(next(it))  # 3
+print(next(it))  # StopIteration</code></pre>
+            </div>
+
+            <h3>Создание собственного итератора</h3>
+            <p>Чтобы создать собственный итератор, достаточно реализовать два метода в классе:</p>
+
+            <div class="example-box">
+                <h4>Итератор квадратов чисел</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class SquareIterator:
+    def __init__(self, n):
+        self.n = n
+        self.current = 1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current > self.n:
+            raise StopIteration
+        result = self.current ** 2
+        self.current += 1
+        return result
+
+for sq in SquareIterator(5):
+    print(sq, end=" ")
+# 1 4 9 16 25</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Итератор диапазона с шагом</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Range:
+    def __init__(self, start, stop, step=1):
+        self.current = start
+        self.stop = stop
+        self.step = step
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current >= self.stop:
+            raise StopIteration
+        value = self.current
+        self.current += self.step
+        return value
+
+print(list(Range(0, 10, 2)))  # [0, 2, 4, 6, 8]
+print(list(Range(1, 6)))      # [1, 2, 3, 4, 5]</code></pre>
+            </div>
+
+            <h3>Разделение iterable и iterator</h3>
+            <p>Хорошая практика — разделять класс-коллекцию (iterable) и класс-итератор. Это позволяет
+                создавать несколько независимых итераторов над одной коллекцией:</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">class NumberCollection:
+    def __init__(self, data):
+        self.data = data
+
+    def __iter__(self):
+        return NumberIterator(self.data)
+
+
+class NumberIterator:
+    def __init__(self, data):
+        self.data = data
+        self.index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index >= len(self.data):
+            raise StopIteration
+        value = self.data[self.index]
+        self.index += 1
+        return value
+
+
+col = NumberCollection([10, 20, 30])
+
+it1 = iter(col)
+it2 = iter(col)
+
+print(next(it1))  # 10
+print(next(it1))  # 20
+print(next(it2))  # 10  — независимый итератор</code></pre>
+            </div>
+        </section>
+
+        <!-- ВСТРОЕННЫЕ ФУНКЦИИ ДЛЯ ИТЕРИРУЕМЫХ ОБЪЕКТОВ -->
+        <section id="builtin-iter-funcs" class="section">
+            <h2>Встроенные функции для итерируемых объектов</h2>
+            <p>Python предоставляет ряд встроенных функций, которые работают с любыми итерируемыми
+                объектами и являются основным инструментом функционального стиля.</p>
+
+            <div class="function-block">
+                <div class="function-signature">all(iterable)</div>
+                <div class="function-description">Возвращает <code>True</code>, если <strong>все</strong>
+                    элементы итерируемого объекта истинны (или объект пуст).</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">any(iterable)</div>
+                <div class="function-description">Возвращает <code>True</code>, если <strong>хотя бы
+                    один</strong> элемент итерируемого объекта истинен. Для пустого объекта — <code>False</code>.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры all() и any()</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">nums = [2, 4, 6, 8]
+print(all(x % 2 == 0 for x in nums))  # True — все чётные
+print(any(x > 5 for x in nums))       # True — есть элементы > 5
+
+passwords = ["abc123", "qwerty", "P@ssw0rd!"]
+print(all(len(p) >= 8 for p in passwords))  # False — не все длиннее 8
+print(any(len(p) >= 8 for p in passwords))  # True — хотя бы одний длиннее 8</code></pre>
+            </div>
+
+            <div class="function-block">
+                <div class="function-signature">enumerate(iterable, start=0)</div>
+                <div class="function-description">Возвращает итератор пар <code>(индекс, значение)</code>.
+                    Параметр <code>start</code> задаёт начальный индекс (по умолчанию 0).</div>
+            </div>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">fruits = ["apple", "banana", "cherry"]
+
+for i, fruit in enumerate(fruits):
+    print(f"{i}: {fruit}")
+# 0: apple
+# 1: banana
+# 2: cherry
+
+for i, fruit in enumerate(fruits, start=1):
+    print(f"{i}. {fruit}")
+# 1. apple
+# 2. banana
+# 3. cherry</code></pre>
+            </div>
+
+            <div class="function-block">
+                <div class="function-signature">zip(*iterables, strict=False)</div>
+                <div class="function-description">Объединяет элементы нескольких итерируемых объектов
+                    в кортежи. Останавливается по кратчайшему. При <code>strict=True</code> выбрасывает
+                    ошибку, если длины отличаются.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры zip()</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">names = ["Alice", "Bob", "Charlie"]
+scores = [88, 95, 72]
+
+for name, score in zip(names, scores):
+    print(f"{name}: {score}")
+# Alice: 88
+# Bob: 95
+# Charlie: 72
+
+combined = dict(zip(names, scores))
+print(combined)  # {'Alice': 88, 'Bob': 95, 'Charlie': 72}
+
+a = [1, 2, 3, 4]
+b = [10, 20]
+print(list(zip(a, b)))  # [(1, 10), (2, 20)] — по кратчайшему</code></pre>
+            </div>
+
+            <div class="function-block">
+                <div class="function-signature">reversed(sequence)</div>
+                <div class="function-description">Возвращает итератор, перебирающий элементы
+                    последовательности в обратном порядке. Работает только с объектами, поддерживающими
+                    <code>__reversed__()</code> или <code>__len__()</code> и <code>__getitem__()</code>.</div>
+            </div>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">nums = [1, 2, 3, 4, 5]
+print(list(reversed(nums)))  # [5, 4, 3, 2, 1]
+
+for ch in reversed("Python"):
+    print(ch, end="")
+# nohtyP</code></pre>
+            </div>
+
+            <div class="function-block">
+                <div class="function-signature">iter(object[, sentinel])</div>
+                <div class="function-description">Возвращает итератор для объекта. В форме с двумя
+                    аргументами вызывает <code>object()</code> до тех пор, пока результат не совпадёт
+                    с <code>sentinel</code>.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">next(iterator[, default])</div>
+                <div class="function-description">Возвращает следующий элемент итератора. Если итератор
+                    исчерпан и указан <code>default</code> — возвращает его вместо <code>StopIteration</code>.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры iter() и next()</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">data = [10, 20, 30]
+it = iter(data)
+
+print(next(it))         # 10
+print(next(it))         # 20
+print(next(it, "end"))  # 30
+print(next(it, "end"))  # end  — итератор исчерпан, возвращает default
+
+import random
+random.seed(42)
+it = iter(lambda: random.randint(1, 6), 6)
+print(list(it))  # числа от 1 до 5, пока не выпало 6</code></pre>
+            </div>
+        </section>
+
+        <!-- FUNCTOOLS -->
+        <section id="functools" class="section">
+            <h2>Модуль functools</h2>
+            <p>Модуль <code>functools</code> предоставляет инструменты высшего порядка для работы
+                с функциями — кэширование, частичное применение, декораторы и свёртка.</p>
+
+            <h3>partial()</h3>
+
+            <div class="function-block">
+                <div class="function-signature">functools.partial(func, *args, **kwargs)</div>
+                <div class="function-description">Создаёт новую функцию с частично зафиксированными
+                    аргументами. Полезно для создания специализированных версий общих функций.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры partial()</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import partial
+
+def power(base, exponent):
+    return base ** exponent
+
+square = partial(power, exponent=2)
+cube   = partial(power, exponent=3)
+
+print(square(5))  # 25
+print(cube(3))    # 27
+
+multiply = lambda x, y: x * y
+double = partial(multiply, 2)
+triple = partial(multiply, 3)
+
+print(list(map(double, [1, 2, 3, 4])))  # [2, 4, 6, 8]
+print(list(map(triple, [1, 2, 3, 4])))  # [3, 6, 9, 12]</code></pre>
+            </div>
+
+            <h3>lru_cache()</h3>
+
+            <div class="function-block">
+                <div class="function-signature">@functools.lru_cache(maxsize=128)</div>
+                <div class="function-description">Декоратор, кэширующий результаты вызовов функции
+                    (Least Recently Used cache). При повторном вызове с теми же аргументами возвращает
+                    сохранённый результат без повторного вычисления. <code>maxsize=None</code> — без ограничений.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Ускорение рекурсии с lru_cache</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+print(fibonacci(50))   # 12586269025 — мгновенно!
+print(fibonacci.cache_info())
+# CacheInfo(hits=48, misses=51, maxsize=None, currsize=51)</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>@cache — упрощённый вариант (Python 3.9+)</h4>
+                <p><code>functools.cache</code> — это то же самое, что <code>lru_cache(maxsize=None)</code>,
+                    но более лаконично:</p>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import cache
+
+@cache
+def factorial(n):
+    return n * factorial(n - 1) if n > 1 else 1
+
+print(factorial(10))  # 3628800</code></pre>
+            </div>
+
+            <h3>wraps()</h3>
+
+            <div class="function-block">
+                <div class="function-signature">@functools.wraps(wrapped)</div>
+                <div class="function-description">Декоратор для корректного написания декораторов.
+                    Копирует метаданные оборачиваемой функции (<code>__name__</code>, <code>__doc__</code>
+                    и др.) во враппер, чтобы они не «терялись».</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Проблема без wraps и решение с ним</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+
+def logger(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"Вызов: {func.__name__}")
+        result = func(*args, **kwargs)
+        print(f"Результат: {result}")
+        return result
+    return wrapper
+
+@logger
+def add(a, b):
+    """Складывает два числа."""
+    return a + b
+
+add(3, 5)
+print(add.__name__)  # add  (без @wraps было бы 'wrapper')
+print(add.__doc__)   # Складывает два числа.</code></pre>
+            </div>
+
+            <h3>reduce()</h3>
+            <p>Функция <code>reduce()</code> уже рассмотрена в разделе
+                <a href="#map-filter-reduce">map, filter, reduce</a>. Она также входит в состав
+                модуля <code>functools</code>.</p>
+
+            <div class="important">
+                <h3>Краткий обзор functools</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Функция</th>
+                            <th>Описание</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td><code>partial(f, ...)</code></td>
+                            <td>Частичное применение аргументов к функции</td>
+                        </tr>
+                        <tr>
+                            <td><code>lru_cache(maxsize)</code></td>
+                            <td>Кэширование результатов вызовов (LRU)</td>
+                        </tr>
+                        <tr>
+                            <td><code>cache</code></td>
+                            <td>Кэширование без ограничения размера (Python 3.9+)</td>
+                        </tr>
+                        <tr>
+                            <td><code>wraps(f)</code></td>
+                            <td>Сохранение метаданных при написании декораторов</td>
+                        </tr>
+                        <tr>
+                            <td><code>reduce(f, seq)</code></td>
+                            <td>Свёртка последовательности в одно значение</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ITERTOOLS -->
+        <section id="itertools" class="section">
+            <h2>Модуль itertools</h2>
+            <p>Модуль <code>itertools</code> содержит набор быстрых и эффективных инструментов
+                для работы с итераторами. Все функции возвращают <strong>ленивые итераторы</strong>
+                — они вычисляют значения только при запросе, экономя память.</p>
+
+            <h3>Бесконечные итераторы</h3>
+
+            <div class="function-block">
+                <div class="function-signature">itertools.count(start=0, step=1)</div>
+                <div class="function-description">Бесконечный счётчик, начиная с <code>start</code>
+                    с шагом <code>step</code>.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.cycle(iterable)</div>
+                <div class="function-description">Бесконечно циклически повторяет элементы
+                    итерируемого объекта.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.repeat(object, times=None)</div>
+                <div class="function-description">Повторяет объект бесконечно или указанное число раз.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры бесконечных итераторов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">import itertools
+
+counter = itertools.count(10, 2)
+print([next(counter) for _ in range(5)])  # [10, 12, 14, 16, 18]
+
+cycler = itertools.cycle(["red", "green", "blue"])
+colors = [next(cycler) for _ in range(7)]
+print(colors)  # ['red', 'green', 'blue', 'red', 'green', 'blue', 'red']
+
+print(list(itertools.repeat("Python", 3)))  # ['Python', 'Python', 'Python']
+print(list(map(lambda x, y: x * y, range(1, 6), itertools.repeat(10))))
+# [10, 20, 30, 40, 50]</code></pre>
+            </div>
+
+            <h3>Итераторы завершающиеся</h3>
+
+            <div class="function-block">
+                <div class="function-signature">itertools.chain(*iterables)</div>
+                <div class="function-description">Последовательно объединяет несколько итерируемых
+                    объектов в один поток элементов.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.islice(iterable, stop) / islice(iterable, start, stop[, step])</div>
+                <div class="function-description">Срез итератора — аналог <code>slice</code> для
+                    обычных последовательностей, но без поддержки отрицательных индексов.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.takewhile(predicate, iterable)</div>
+                <div class="function-description">Берёт элементы, пока предикат истинен. При первом
+                    ложном значении останавливается.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.dropwhile(predicate, iterable)</div>
+                <div class="function-description">Пропускает элементы, пока предикат истинен.
+                    Начинает отдавать элементы с первого ложного.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.groupby(iterable, key=None)</div>
+                <div class="function-description">Группирует последовательные элементы по ключу.
+                    <strong>Важно:</strong> данные должны быть отсортированы по тому же ключу.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.zip_longest(*iterables, fillvalue=None)</div>
+                <div class="function-description">Аналог <code>zip()</code>, но дополняет короткие
+                    последовательности значением <code>fillvalue</code> вместо обрезки.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>chain, islice, takewhile, dropwhile</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">import itertools
+
+chained = list(itertools.chain([1, 2], [3, 4], [5]))
+print(chained)  # [1, 2, 3, 4, 5]
+
+sliced = list(itertools.islice(range(100), 2, 10, 2))
+print(sliced)  # [2, 4, 6, 8]
+
+taken = list(itertools.takewhile(lambda x: x < 5, [1, 2, 3, 7, 1, 2]))
+print(taken)  # [1, 2, 3] — остановился на 7, не проверяет дальше
+
+dropped = list(itertools.dropwhile(lambda x: x < 5, [1, 2, 3, 7, 1, 2]))
+print(dropped)  # [7, 1, 2] — пропустил всё до первого >= 5</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>groupby и zip_longest</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">import itertools
+
+data = [("Alice", "dev"), ("Bob", "dev"), ("Charlie", "qa"), ("Diana", "qa")]
+
+for dept, members in itertools.groupby(data, key=lambda x: x[1]):
+    names = [m[0] for m in members]
+    print(f"{dept}: {names}")
+# dev: ['Alice', 'Bob']
+# qa: ['Charlie', 'Diana']
+
+a = [1, 2, 3, 4]
+b = [10, 20]
+print(list(itertools.zip_longest(a, b, fillvalue=0)))
+# [(1, 10), (2, 20), (3, 0), (4, 0)]</code></pre>
+            </div>
+
+            <h3>Комбинаторные итераторы</h3>
+            <p>Функции для генерации комбинаций, перестановок и декартовых произведений. Все они
+                принимают входной итерируемый объект и возвращают кортежи.</p>
+
+            <div class="function-block">
+                <div class="function-signature">itertools.product(*iterables, repeat=1)</div>
+                <div class="function-description">Декартово произведение множеств — все возможные
+                    комбинации по одному элементу из каждого. Параметр <code>repeat</code> повторяет
+                    входной итерируемый объект указанное число раз.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.permutations(iterable, r=None)</div>
+                <div class="function-description">Все перестановки элементов длиной <code>r</code>
+                    (без повторений). Порядок важен. Если <code>r</code> не указан — перестановки
+                    из всех элементов.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.combinations(iterable, r)</div>
+                <div class="function-description">Все комбинации длиной <code>r</code> без повторений
+                    и без учёта порядка. Элементы сортируются лексикографически.</div>
+            </div>
+            <div class="function-block">
+                <div class="function-signature">itertools.combinations_with_replacement(iterable, r)</div>
+                <div class="function-description">Комбинации длиной <code>r</code> с допустимыми
+                    повторениями одного элемента.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Примеры комбинаторных функций</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">import itertools
+
+print(list(itertools.product('AB', repeat=2)))
+# [('A','A'),('A','B'),('B','A'),('B','B')]
+
+print(list(itertools.permutations('ABCD', 2)))
+# [('A','B'),('A','C'),('A','D'),('B','A'),('B','C'),('B','D'),
+#  ('C','A'),('C','B'),('C','D'),('D','A'),('D','B'),('D','C')]
+
+print(list(itertools.combinations('ABCD', 2)))
+# [('A','B'),('A','C'),('A','D'),('B','C'),('B','D'),('C','D')]
+
+print(list(itertools.combinations_with_replacement('ABCD', 2)))
+# [('A','A'),('A','B'),('A','C'),('A','D'),('B','B'),('B','C'),
+#  ('B','D'),('C','C'),('C','D'),('D','D')]</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Сравнение комбинаторных функций</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Функция</th>
+                            <th>Повторения</th>
+                            <th>Порядок важен</th>
+                            <th>Пример ('AB', 2)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td><code>product</code></td>
+                            <td>✅ Да</td>
+                            <td>✅ Да</td>
+                            <td>AA AB BA BB</td>
+                        </tr>
+                        <tr>
+                            <td><code>permutations</code></td>
+                            <td>❌ Нет</td>
+                            <td>✅ Да</td>
+                            <td>AB BA</td>
+                        </tr>
+                        <tr>
+                            <td><code>combinations</code></td>
+                            <td>❌ Нет</td>
+                            <td>❌ Нет</td>
+                            <td>AB</td>
+                        </tr>
+                        <tr>
+                            <td><code>combinations_with_replacement</code></td>
+                            <td>✅ Да</td>
+                            <td>❌ Нет</td>
+                            <td>AA AB BB</td>
                         </tr>
                         </tbody>
                     </table>
