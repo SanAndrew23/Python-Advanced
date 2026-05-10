@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Декораторы функций</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/prism.css">
+    <script src="https://kit.fontawesome.com/b8991598f2.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1><span class="emoji">🎨</span>Декораторы функций</h1>
+        <p>Теоретический материал</p>
+    </header>
+
+    <nav class="nav">
+        <ul>
+            <li><a href="#first-class">🔹 Функции как объекты первого класса</a></li>
+            <li><a href="#closures">🔹 Замыкания</a></li>
+            <li><a href="#decorator-basics">🔹 Написание декоратора с нуля</a></li>
+            <li><a href="#decorator-args">🔹 Декораторы для функций с аргументами</a></li>
+            <li><a href="#stacking">🔹 Стекирование декораторов</a></li>
+            <li><a href="#functools-wraps">🔹 functools.wraps</a></li>
+            <li><a href="#parametrized">🔹 Декораторы с аргументами</a></li>
+            <li><a href="#practical">🔹 Практические примеры</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+
+        <!-- ФУНКЦИИ КАК ОБЪЕКТЫ -->
+        <section id="first-class" class="section">
+            <h2>Функции как объекты первого класса</h2>
+            <p>В Python функции являются <strong>объектами первого класса</strong> (first-class objects).
+                Это означает, что функцию можно присваивать переменной, передавать как аргумент другой
+                функции, возвращать из функции и хранить в структурах данных — точно так же, как любое
+                другое значение.</p>
+
+            <div class="important">
+                <h3>Что значит «объект первого класса»?</h3>
+                <ul>
+                    <li>Функцию можно <strong>присвоить переменной</strong>.</li>
+                    <li>Функцию можно <strong>передать как аргумент</strong> другой функции.</li>
+                    <li>Функцию можно <strong>вернуть из функции</strong>.</li>
+                    <li>Функцию можно <strong>хранить в списке, словаре</strong> и других структурах.</li>
+                </ul>
+            </div>
+
+            <h3>Присваивание функции переменной</h3>
+            <div class="example-box">
+                <h4>Функция — это объект</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def greet(name):
+    return f"Привет, {name}!"
+
+say_hello = greet
+
+print(greet("Алиса"))     # Привет, Алиса!
+print(say_hello("Боб"))   # Привет, Боб!
+
+print(type(greet))        # &lt;class 'function'&gt;
+print(greet.__name__)     # greet
+print(id(greet) == id(say_hello))  # True — тот же объект</code></pre>
+            </div>
+
+            <h3>Передача функции как аргумента</h3>
+            <p>Функции, принимающие другие функции в качестве аргументов, называются
+                <strong>функциями высшего порядка</strong>.</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">def apply(func, value):
+    return func(value)
+
+def double(x):
+    return x * 2
+
+def square(x):
+    return x ** 2
+
+print(apply(double, 5))   # 10
+print(apply(square, 5))   # 25
+
+print(apply(str.upper, "hello"))  # HELLO
+print(apply(len, [1, 2, 3, 4]))   # 4</code></pre>
+            </div>
+
+            <h3>Возврат функции из функции</h3>
+            <p>Функция, возвращающая другую функцию, называется <strong>фабрикой функций</strong>.
+                Именно на этом принципе основаны декораторы.</p>
+
+            <div class="example-box">
+                <h4>Фабрика функций-умножителей</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def make_multiplier(factor):
+    def multiplier(x):
+        return x * factor
+    return multiplier
+
+double = make_multiplier(2)
+triple = make_multiplier(3)
+
+print(double(5))   # 10
+print(triple(5))   # 15
+print(double(triple(4)))  # 24</code></pre>
+            </div>
+
+            <h3>Хранение функций в структурах данных</h3>
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">import math
+
+operations = {
+    "sin": math.sin,
+    "cos": math.cos,
+    "sqrt": math.sqrt,
+    "abs": abs,
+}
+
+for name, func in operations.items():
+    print(f"{name}(4) = {func(4):.4f}")
+# sin(4) = -0.7568
+# cos(4) = -0.6536
+# sqrt(4) = 2.0000
+# abs(4) = 4.0000</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Функции — это объекты с атрибутами</h4>
+                <p>У каждой функции есть встроенные атрибуты: <code>__name__</code>, <code>__doc__</code>,
+                    <code>__module__</code>, <code>__annotations__</code>, <code>__defaults__</code> и др.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">def add(a: int, b: int = 0) -> int:
+    """Складывает два числа."""
+    return a + b
+
+print(add.__name__)         # add
+print(add.__doc__)          # Складывает два числа.
+print(add.__annotations__)  # {'a': &lt;class 'int'&gt;, 'b': &lt;class 'int'&gt;, 'return': &lt;class 'int'&gt;}
+print(add.__defaults__)     # (0,)</code></pre>
+            </div>
+        </section>
+
+        <!-- ЗАМЫКАНИЯ -->
+        <section id="closures" class="section">
+            <h2>Замыкания</h2>
+            <p>Замыкание (<em>closure</em>) — это вложенная функция, которая «запоминает» переменные
+                из охватывающей области видимости даже после того, как внешняя функция завершила
+                свою работу. Замыкания являются фундаментом для декораторов.</p>
+
+            <div class="important">
+                <h3>Три условия замыкания</h3>
+                <ul>
+                    <li>Должна существовать <strong>вложенная функция</strong>.</li>
+                    <li>Вложенная функция должна <strong>ссылаться на переменную</strong> из охватывающей области.</li>
+                    <li>Внешняя функция должна <strong>возвращать вложенную</strong> функцию.</li>
+                </ul>
+            </div>
+
+            <div class="example-box">
+                <h4>Простое замыкание — счётчик</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def make_counter():
+    count = 0
+
+    def counter():
+        nonlocal count
+        count += 1
+        return count
+
+    return counter
+
+counter1 = make_counter()
+counter2 = make_counter()
+
+print(counter1())  # 1
+print(counter1())  # 2
+print(counter1())  # 3
+print(counter2())  # 1 — независимый счётчик
+print(counter2())  # 2</code></pre>
+            </div>
+
+            <h3>Свободные переменные и ячейки</h3>
+            <p>Переменные из охватывающей области, на которые ссылается замыкание, называются
+                <strong>свободными переменными</strong>. Python хранит их в специальных объектах —
+                <em>ячейках</em> (<code>cell</code>).</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">def make_adder(n):
+    def adder(x):
+        return x + n   # n — свободная переменная
+    return adder
+
+add5 = make_adder(5)
+add10 = make_adder(10)
+
+print(add5(3))    # 8
+print(add10(3))   # 13
+
+print(add5.__closure__)           # (&lt;cell at 0x...&gt;,)
+print(add5.__closure__[0].cell_contents)  # 5</code></pre>
+            </div>
+
+            <h3>nonlocal — изменение переменной замыкания</h3>
+            <p>По умолчанию вложенная функция может только <em>читать</em> переменную из внешней
+                области. Чтобы <em>изменить</em> её, необходимо объявить переменную через
+                <code>nonlocal</code>.</p>
+
+            <div class="example-box">
+                <h4>Аккумулятор с nonlocal</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def make_accumulator(initial=0):
+    total = initial
+
+    def add(value):
+        nonlocal total
+        total += value
+        return total
+
+    return add
+
+acc = make_accumulator(100)
+print(acc(10))   # 110
+print(acc(20))   # 130
+print(acc(-5))   # 125</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Замыкание с несколькими вложенными функциями</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def make_power_functions():
+    results = []
+
+    for exp in range(1, 4):
+        def power(x, e=exp):
+            return x ** e
+        results.append(power)
+
+    return results
+
+linear, quadratic, cubic = make_power_functions()
+
+print(linear(3))     # 3
+print(quadratic(3))  # 9
+print(cubic(3))      # 27</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Классическая ловушка с замыканиями в цикле</h4>
+                <p>Если не использовать параметр по умолчанию (<code>e=exp</code>), все функции
+                    захватят <em>одну и ту же ячейку</em>, и после цикла она будет содержать последнее
+                    значение переменной.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">funcs_wrong = [lambda x: x ** i for i in range(1, 4)]
+print(funcs_wrong[0](3))  # 27 — неожиданно! i = 3 для всех
+
+funcs_right = [lambda x, e=i: x ** e for i in range(1, 4)]
+print(funcs_right[0](3))  # 3   — правильно</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Замыкание vs Класс</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Аспект</th>
+                            <th>Замыкание</th>
+                            <th>Класс</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Состояние</td>
+                            <td>Свободные переменные</td>
+                            <td>Атрибуты экземпляра</td>
+                        </tr>
+                        <tr>
+                            <td>Методы</td>
+                            <td>Одна функция</td>
+                            <td>Несколько методов</td>
+                        </tr>
+                        <tr>
+                            <td>Краткость</td>
+                            <td>✅ Компактное</td>
+                            <td>❌ Более многословное</td>
+                        </tr>
+                        <tr>
+                            <td>Расширяемость</td>
+                            <td>❌ Ограниченная</td>
+                            <td>✅ Легко расширять</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- НАПИСАНИЕ ДЕКОРАТОРА С НУЛЯ -->
+        <section id="decorator-basics" class="section">
+            <h2>Написание декоратора с нуля</h2>
+            <p>Декоратор — это функция, которая принимает другую функцию, <strong>добавляет к ней
+                дополнительное поведение</strong> и возвращает новую (или ту же) функцию. Декораторы
+                позволяют модифицировать функцию без изменения её исходного кода.</p>
+
+            <div class="syntax-block">
+                <pre><code>def decorator(func):
+    def wrapper():
+        # действия до вызова
+        result = func()
+        # действия после вызова
+        return result
+    return wrapper</code></pre>
+            </div>
+
+            <h3>Шаг за шагом: создаём первый декоратор</h3>
+            <div class="example-box">
+                <h4>Декоратор логирования без синтаксиса @</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def log_call(func):
+    def wrapper():
+        print(f"→ Вызов функции '{func.__name__}'")
+        result = func()
+        print(f"← Функция '{func.__name__}' завершена")
+        return result
+    return wrapper
+
+def say_hello():
+    print("Привет!")
+
+say_hello = log_call(say_hello)
+say_hello()
+# → Вызов функции 'say_hello'
+# Привет!
+# ← Функция 'say_hello' завершена</code></pre>
+            </div>
+
+            <h3>Синтаксис @ — синтаксический сахар</h3>
+            <p>Запись <code>@decorator</code> над определением функции — это краткая форма
+                <code>func = decorator(func)</code>. Оба варианта полностью эквивалентны.</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">def log_call(func):
+    def wrapper():
+        print(f"→ Вызов функции '{func.__name__}'")
+        result = func()
+        print(f"← Функция '{func.__name__}' завершена")
+        return result
+    return wrapper
+
+@log_call
+def say_hello():
+    print("Привет!")
+
+say_hello()
+# → Вызов функции 'say_hello'
+# Привет!
+# ← Функция 'say_hello' завершена</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Как Python выполняет @decorator</h4>
+                <p>При загрузке модуля Python выполняет следующее преобразование:</p>
+                <pre class="line-numbers match-braces"><code class="language-python">@decorator
+def func():
+    ...
+
+# Эквивалентно:
+def func():
+    ...
+func = decorator(func)</code></pre>
+            </div>
+
+            <h3>Декоратор замера времени</h3>
+            <div class="example-box">
+                <h4>Измерение времени выполнения</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">import time
+
+def timer(func):
+    def wrapper():
+        start = time.perf_counter()
+        result = func()
+        elapsed = time.perf_counter() - start
+        print(f"Время выполнения '{func.__name__}': {elapsed:.6f} сек")
+        return result
+    return wrapper
+
+@timer
+def slow_function():
+    time.sleep(0.1)
+    print("Готово!")
+
+slow_function()
+# Готово!
+# Время выполнения 'slow_function': 0.100234 сек</code></pre>
+            </div>
+        </section>
+
+        <!-- ДЕКОРАТОРЫ ДЛЯ ФУНКЦИЙ С АРГУМЕНТАМИ -->
+        <section id="decorator-args" class="section">
+            <h2>Декораторы для функций с аргументами</h2>
+            <p>Простой декоратор работает только для функций без аргументов. Чтобы декоратор был
+                универсальным — подходил для любой функции — wrapper должен принимать
+                <code>*args</code> и <code>**kwargs</code> и передавать их в оригинальную функцию.</p>
+
+            <div class="syntax-block">
+                <pre><code>def decorator(func):
+    def wrapper(*args, **kwargs):
+        # действия до
+        result = func(*args, **kwargs)
+        # действия после
+        return result
+    return wrapper</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Универсальный декоратор логирования</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def log(func):
+    def wrapper(*args, **kwargs):
+        args_repr = [repr(a) for a in args]
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+        all_args = ", ".join(args_repr + kwargs_repr)
+        print(f"Вызов: {func.__name__}({all_args})")
+        result = func(*args, **kwargs)
+        print(f"Вернул: {result!r}")
+        return result
+    return wrapper
+
+@log
+def add(a, b):
+    return a + b
+
+@log
+def greet(name, greeting="Привет"):
+    return f"{greeting}, {name}!"
+
+add(3, 5)
+# Вызов: add(3, 5)
+# Вернул: 8
+
+greet("Алиса", greeting="Здравствуй")
+# Вызов: greet('Алиса', greeting='Здравствуй')
+# Вернул: 'Здравствуй, Алиса!'</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Декоратор проверки типов аргументов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def validate_positive(func):
+    def wrapper(*args, **kwargs):
+        for arg in args:
+            if isinstance(arg, (int, float)) and arg < 0:
+                raise ValueError(f"Аргументы должны быть положительными, получено: {arg}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@validate_positive
+def sqrt(x):
+    return x ** 0.5
+
+print(sqrt(9))    # 3.0
+print(sqrt(-4))   # ValueError: Аргументы должны быть положительными, получено: -4</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Декоратор кэширования (простая версия)</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def simple_cache(func):
+    cache = {}
+
+    def wrapper(*args):
+        if args not in cache:
+            cache[args] = func(*args)
+            print(f"  Вычислено: {func.__name__}{args}")
+        else:
+            print(f"  Из кэша:   {func.__name__}{args}")
+        return cache[args]
+
+    return wrapper
+
+@simple_cache
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+print(fibonacci(5))
+# Вычислено: fibonacci(0,)
+# Вычислено: fibonacci(1,)
+# Вычислено: fibonacci(2,)
+# ...
+# 5</code></pre>
+            </div>
+        </section>
+
+        <!-- СТЕКИРОВАНИЕ ДЕКОРАТОРОВ -->
+        <section id="stacking" class="section">
+            <h2>Стекирование декораторов</h2>
+            <p>К одной функции можно применить несколько декораторов одновременно. Декораторы
+                применяются <strong>снизу вверх</strong> (ближайший к функции — первым), а выполняются
+                <strong>сверху вниз</strong>.</p>
+
+            <div class="syntax-block">
+                <pre><code>@decorator_a
+@decorator_b
+@decorator_c
+def func():
+    ...
+
+# Эквивалентно:
+func = decorator_a(decorator_b(decorator_c(func)))</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Порядок применения декораторов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def bold(func):
+    def wrapper(*args, **kwargs):
+        return f"&lt;b&gt;{func(*args, **kwargs)}&lt;/b&gt;"
+    return wrapper
+
+def italic(func):
+    def wrapper(*args, **kwargs):
+        return f"&lt;i&gt;{func(*args, **kwargs)}&lt;/i&gt;"
+    return wrapper
+
+def underline(func):
+    def wrapper(*args, **kwargs):
+        return f"&lt;u&gt;{func(*args, **kwargs)}&lt;/u&gt;"
+    return wrapper
+
+@bold
+@italic
+@underline
+def greet(name):
+    return f"Привет, {name}!"
+
+print(greet("Алиса"))
+# &lt;b&gt;&lt;i&gt;&lt;u&gt;Привет, Алиса!&lt;/u&gt;&lt;/i&gt;&lt;/b&gt;</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Стекирование практических декораторов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">import time
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        print(f"Время: {time.perf_counter() - start:.4f} сек")
+        return result
+    return wrapper
+
+def log(func):
+    def wrapper(*args, **kwargs):
+        print(f"Вызов: {func.__name__}")
+        result = func(*args, **kwargs)
+        print(f"Готово: {func.__name__}")
+        return result
+    return wrapper
+
+@timer
+@log
+def process(n):
+    return sum(range(n))
+
+result = process(1_000_000)
+# Вызов: process
+# Готово: process
+# Время: 0.0312 сек</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Порядок имеет значение</h4>
+                <p>Изменение порядка декораторов изменяет поведение. В примере выше <code>@timer</code>
+                    измеряет время всего вызова включая логи <code>@log</code>, потому что применяется
+                    снаружи. Поменяйте их местами — и <code>@timer</code> будет измерять только
+                    само тело функции.</p>
+            </div>
+        </section>
+
+        <!-- FUNCTOOLS.WRAPS -->
+        <section id="functools-wraps" class="section">
+            <h2>functools.wraps</h2>
+            <p>При обёртывании функции в декоратор создаётся новая функция <code>wrapper</code>.
+                Это приводит к <strong>потере метаданных</strong> оригинальной функции: имени,
+                строки документации, аннотаций типов и других атрибутов.</p>
+
+            <div class="example-box">
+                <h4>Проблема: метаданные теряются</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def decorator(func):
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+@decorator
+def greet(name: str) -> str:
+    """Возвращает приветствие."""
+    return f"Привет, {name}!"
+
+print(greet.__name__)         # wrapper  ← должно быть 'greet'
+print(greet.__doc__)          # None     ← потеряли документацию
+print(greet.__annotations__)  # {}       ← потеряли аннотации</code></pre>
+            </div>
+
+            <h3>Решение: @functools.wraps</h3>
+            <p>Декоратор <code>@functools.wraps(func)</code> копирует все важные атрибуты из
+                оригинальной функции в wrapper: <code>__name__</code>, <code>__qualname__</code>,
+                <code>__doc__</code>, <code>__dict__</code>, <code>__annotations__</code>,
+                <code>__module__</code>, <code>__wrapped__</code>.</p>
+
+            <div class="function-block">
+                <div class="function-signature">@functools.wraps(wrapped, assigned=WRAPPER_ASSIGNMENTS, updated=WRAPPER_UPDATES)</div>
+                <div class="function-description">Декоратор для использования внутри декораторов.
+                    Копирует метаданные функции <code>wrapped</code> на функцию-обёртку.
+                    Также добавляет атрибут <code>__wrapped__</code>, указывающий на оригинальную функцию.</div>
+            </div>
+
+            <div class="example-box">
+                <h4>Правильное использование @wraps</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+
+def decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+@decorator
+def greet(name: str) -> str:
+    """Возвращает приветствие."""
+    return f"Привет, {name}!"
+
+print(greet.__name__)         # greet   ✅
+print(greet.__doc__)          # Возвращает приветствие.  ✅
+print(greet.__annotations__)  # {'name': &lt;class 'str'&gt;, 'return': &lt;class 'str'&gt;}  ✅
+print(greet.__wrapped__)      # &lt;function greet at 0x...&gt;  — ссылка на оригинал</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Полноценный декоратор с @wraps</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+import time
+
+def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        elapsed = time.perf_counter() - start
+        print(f"[{func.__name__}] выполнено за {elapsed:.6f} сек")
+        return result
+    return wrapper
+
+@timer
+def compute_sum(n: int) -> int:
+    """Возвращает сумму чисел от 0 до n."""
+    return sum(range(n))
+
+result = compute_sum(1_000_000)
+print(result)
+# [compute_sum] выполнено за 0.031842 сек
+# 499999500000
+
+print(compute_sum.__name__)  # compute_sum  ✅
+print(compute_sum.__doc__)   # Возвращает сумму чисел от 0 до n.  ✅</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>__wrapped__ для интроспекции</h4>
+                <p>Атрибут <code>__wrapped__</code> позволяет добраться до оригинальной функции,
+                    минуя все декораторы. Это полезно в тестах и инструментах интроспекции.</p>
+                <pre class="line-numbers match-braces"><code class="language-python">@timer
+@timer
+def my_func():
+    pass
+
+print(my_func.__wrapped__)            # функция, обёрнутая первым @timer
+print(my_func.__wrapped__.__wrapped__)  # оригинальная my_func</code></pre>
+            </div>
+        </section>
+
+        <!-- ДЕКОРАТОРЫ С АРГУМЕНТАМИ -->
+        <section id="parametrized" class="section">
+            <h2>Декораторы с аргументами</h2>
+            <p>Иногда декоратору нужно передать параметры. Для этого создаётся <strong>фабрика
+                декораторов</strong> — функция, принимающая аргументы и возвращающая сам декоратор.
+                Появляется дополнительный уровень вложенности.</p>
+
+            <div class="syntax-block">
+                <pre><code>def decorator_factory(arg1, arg2):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # использует arg1, arg2
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@decorator_factory(arg1, arg2)
+def func():
+    ...</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Как Python выполняет @decorator_factory(args)</h4>
+                <p>Запись <code>@decorator_factory(arg)</code> выполняется в два шага:</p>
+                <pre class="line-numbers match-braces"><code class="language-python">@decorator_factory(arg)
+def func():
+    ...
+
+# Эквивалентно:
+decorator = decorator_factory(arg)  # шаг 1: вызов фабрики
+func = decorator(func)              # шаг 2: применение декоратора</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Декоратор repeat — повторяет вызов N раз</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+
+def repeat(times):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = None
+            for _ in range(times):
+                result = func(*args, **kwargs)
+            return result
+        return wrapper
+    return decorator
+
+@repeat(3)
+def greet(name):
+    print(f"Привет, {name}!")
+
+greet("Алиса")
+# Привет, Алиса!
+# Привет, Алиса!
+# Привет, Алиса!</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Декоратор retry — повторяет при исключении</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+import time
+
+def retry(times=3, delay=1.0, exceptions=(Exception,)):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_error = None
+            for attempt in range(1, times + 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_error = e
+                    print(f"Попытка {attempt}/{times} не удалась: {e}")
+                    if attempt < times:
+                        time.sleep(delay)
+            raise last_error
+        return wrapper
+    return decorator
+
+import random
+
+@retry(times=3, delay=0.1)
+def unstable_request():
+    if random.random() < 0.7:
+        raise ConnectionError("Нет соединения")
+    return "Успех!"
+
+print(unstable_request())</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Декоратор validate_type — проверка типов аргументов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+
+def validate_types(**type_map):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            import inspect
+            sig = inspect.signature(func)
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+            for param_name, expected_type in type_map.items():
+                value = bound.arguments.get(param_name)
+                if value is not None and not isinstance(value, expected_type):
+                    raise TypeError(
+                        f"Параметр '{param_name}' должен быть {expected_type.__name__}, "
+                        f"получено {type(value).__name__}"
+                    )
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@validate_types(name=str, age=int)
+def register(name, age):
+    print(f"Зарегистрирован: {name}, {age} лет")
+
+register("Алиса", 25)    # Зарегистрирован: Алиса, 25 лет
+register("Боб", "20")    # TypeError: Параметр 'age' должен быть int, получено str</code></pre>
+            </div>
+
+            <h3>Декоратор, работающий и с аргументами, и без</h3>
+            <p>Иногда удобно, чтобы декоратор мог использоваться как с аргументами
+                (<code>@decorator(arg)</code>), так и без (<code>@decorator</code>). Это достигается
+                через проверку типа первого аргумента.</p>
+
+            <div class="pre-code">
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps, partial
+
+def repeat(_func=None, *, times=1):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for _ in range(times):
+                result = func(*args, **kwargs)
+            return result
+        return wrapper
+
+    if _func is not None:
+        return decorator(_func)
+    return decorator
+
+@repeat
+def say_once():
+    print("Раз!")
+
+@repeat(times=3)
+def say_three():
+    print("Три!")
+
+say_once()   # Раз!
+say_three()  # Три! Три! Три!</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Три уровня вложенности декоратора с аргументами</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Уровень</th>
+                            <th>Функция</th>
+                            <th>Принимает</th>
+                            <th>Возвращает</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>1 (фабрика)</td>
+                            <td><code>decorator_factory</code></td>
+                            <td>Аргументы декоратора</td>
+                            <td>Декоратор</td>
+                        </tr>
+                        <tr>
+                            <td>2 (декоратор)</td>
+                            <td><code>decorator</code></td>
+                            <td>Функцию <code>func</code></td>
+                            <td><code>wrapper</code></td>
+                        </tr>
+                        <tr>
+                            <td>3 (обёртка)</td>
+                            <td><code>wrapper</code></td>
+                            <td><code>*args, **kwargs</code></td>
+                            <td>Результат <code>func</code></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ПРАКТИЧЕСКИЕ ПРИМЕРЫ -->
+        <section id="practical" class="section">
+            <h2>Практические примеры</h2>
+            <p>Декораторы широко применяются в реальных проектах. Рассмотрим наиболее полезные
+                и часто встречающиеся паттерны.</p>
+
+            <h3>Декоратор авторизации</h3>
+            <div class="example-box">
+                <h4>Проверка прав доступа</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+
+CURRENT_USER = {"name": "Алиса", "role": "admin"}
+
+def require_role(role):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if CURRENT_USER.get("role") != role:
+                raise PermissionError(
+                    f"Доступ запрещён. Требуется роль: {role}, "
+                    f"у пользователя: {CURRENT_USER.get('role')}"
+                )
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@require_role("admin")
+def delete_user(user_id):
+    print(f"Пользователь {user_id} удалён")
+
+@require_role("superadmin")
+def shutdown_server():
+    print("Сервер остановлен")
+
+delete_user(42)    # Пользователь 42 удалён
+shutdown_server()  # PermissionError: Доступ запрещён. Требуется роль: superadmin</code></pre>
+            </div>
+
+            <h3>Декоратор замера времени с порогом</h3>
+            <div class="example-box">
+                <h4>Предупреждение о медленных вызовах</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+import time
+
+def slow_warning(threshold=1.0):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start = time.perf_counter()
+            result = func(*args, **kwargs)
+            elapsed = time.perf_counter() - start
+            if elapsed > threshold:
+                print(f"⚠ '{func.__name__}' выполнялась {elapsed:.2f} сек (порог: {threshold} сек)")
+            return result
+        return wrapper
+    return decorator
+
+@slow_warning(threshold=0.5)
+def fast():
+    time.sleep(0.1)
+
+@slow_warning(threshold=0.5)
+def slow():
+    time.sleep(1.0)
+
+fast()  # (без предупреждения)
+slow()  # ⚠ 'slow' выполнялась 1.00 сек (порог: 0.5 сек)</code></pre>
+            </div>
+
+            <h3>Декоратор для синглтона</h3>
+            <div class="example-box">
+                <h4>Паттерн Singleton через декоратор класса</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">def singleton(cls):
+    instances = {}
+
+    def get_instance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return get_instance
+
+@singleton
+class DatabaseConnection:
+    def __init__(self, host):
+        self.host = host
+        print(f"Подключение к {host}")
+
+db1 = DatabaseConnection("localhost")  # Подключение к localhost
+db2 = DatabaseConnection("localhost")  # (без вывода — тот же объект)
+
+print(db1 is db2)  # True</code></pre>
+            </div>
+
+            <h3>Декоратор deprecation warning</h3>
+            <div class="example-box">
+                <h4>Пометить функцию как устаревшую</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import wraps
+import warnings
+
+def deprecated(message=""):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            warn_msg = f"'{func.__name__}' устарела и будет удалена в следующих версиях."
+            if message:
+                warn_msg += f" {message}"
+            warnings.warn(warn_msg, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@deprecated("Используйте новую функцию compute() вместо неё.")
+def old_compute(x):
+    return x * 2
+
+result = old_compute(5)
+# DeprecationWarning: 'old_compute' устарела ... Используйте новую функцию compute() вместо неё.
+print(result)  # 10</code></pre>
+            </div>
+
+            <div class="important">
+                <h3>Когда использовать декораторы?</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Задача</th>
+                            <th>Декоратор</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Логирование вызовов</td>
+                            <td><code>@log</code></td>
+                        </tr>
+                        <tr>
+                            <td>Замер времени выполнения</td>
+                            <td><code>@timer</code></td>
+                        </tr>
+                        <tr>
+                            <td>Кэширование результатов</td>
+                            <td><code>@lru_cache</code>, <code>@cache</code></td>
+                        </tr>
+                        <tr>
+                            <td>Проверка прав доступа</td>
+                            <td><code>@require_role</code>, <code>@login_required</code></td>
+                        </tr>
+                        <tr>
+                            <td>Валидация аргументов</td>
+                            <td><code>@validate_types</code></td>
+                        </tr>
+                        <tr>
+                            <td>Повтор при ошибке</td>
+                            <td><code>@retry</code></td>
+                        </tr>
+                        <tr>
+                            <td>Пометка устаревшего кода</td>
+                            <td><code>@deprecated</code></td>
+                        </tr>
+                        <tr>
+                            <td>Паттерн Singleton</td>
+                            <td><code>@singleton</code></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="note">
+                <h4>Декораторы в стандартной библиотеке и популярных фреймворках</h4>
+                <ul>
+                    <li><code>@staticmethod</code>, <code>@classmethod</code>, <code>@property</code> — встроенные декораторы Python.</li>
+                    <li><code>@functools.lru_cache</code>, <code>@functools.cache</code>, <code>@functools.wraps</code> — из <code>functools</code>.</li>
+                    <li><code>@app.route("/path")</code> — маршрутизация во Flask/FastAPI.</li>
+                    <li><code>@pytest.fixture</code>, <code>@pytest.mark.parametrize</code> — в тестировании.</li>
+                    <li><code>@dataclass</code> — автогенерация методов класса.</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+</div>
+<script src="../assets/js/prism.js"></script>
+<script src="../assets/js/script.js"></script>
+</body>
+</html>
