@@ -1,9 +1,16 @@
+import time
 from functools import lru_cache
 
+start = time.perf_counter()
+
 @lru_cache(maxsize=None)
-def factorial(n):
+def fibonacci(n):
     if n <= 1:
         return n
-    return n * factorial(n-1)
+    return fibonacci(n-1) + fibonacci(n-2)
 
-print(factorial(5))
+print(fibonacci(900))
+
+end = time.perf_counter()
+print(end - start)
+print(fibonacci.cache_info())
