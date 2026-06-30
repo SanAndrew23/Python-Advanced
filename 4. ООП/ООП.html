@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Основы ООП</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/prism.css">
+    <script src="https://kit.fontawesome.com/b8991598f2.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1><span class="emoji">🏗</span>Основы ООП</h1>
+        <p>Теоретический материал</p>
+    </header>
+
+    <nav class="nav">
+        <ul>
+            <li><a href="#classes-objects">🔹 Классы и объекты, __init__</a></li>
+            <li><a href="#inheritance">🔹 Наследование и super()</a></li>
+            <li><a href="#magic-methods">🔹 Магические методы</a></li>
+            <li><a href="#polymorphism">🔹 Полиморфизм</a></li>
+            <li><a href="#encapsulation">🔹 Инкапсуляция</a></li>
+            <li><a href="#class-static">🔹 Методы класса и статические методы</a></li>
+            <li><a href="#properties">🔹 Свойства (property)</a></li>
+            <li><a href="#dataclasses">🔹 dataclasses</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+
+        <!-- КЛАССЫ И ОБЪЕКТЫ -->
+        <section id="classes-objects" class="section">
+            <h2>Классы и объекты, <code>__init__</code></h2>
+            <p>Объектно-ориентированное программирование (<strong>ООП</strong>) — это парадигма, в которой
+                программа строится из <strong>объектов</strong>, объединяющих данные (атрибуты) и поведение
+                (методы). <strong>Класс</strong> — это шаблон (чертёж), по которому создаются объекты.</p>
+
+            <div class="important">
+                <h3>Ключевые понятия ООП</h3>
+                <ul>
+                    <li><strong>Класс</strong> — описание структуры и поведения будущих объектов.</li>
+                    <li><strong>Объект (экземпляр)</strong> — конкретный экземпляр класса с собственными данными.</li>
+                    <li><strong>Атрибут</strong> — переменная, принадлежащая объекту или классу.</li>
+                    <li><strong>Метод</strong> — функция, определённая внутри класса.</li>
+                    <li><strong><code>self</code></strong> — ссылка на текущий объект, первый параметр каждого метода экземпляра.</li>
+                </ul>
+            </div>
+
+            <h3>Объявление класса</h3>
+
+            <div class="syntax-block">
+                <pre><code>class ИмяКласса:
+    def __init__(self, параметры):
+        self.атрибут = значение
+
+    def метод(self):
+        ...</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Первый класс: описание собаки</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Dog:
+    def __init__(self, name, breed, age):
+        self.name = name
+        self.breed = breed
+        self.age = age
+
+    def bark(self):
+        return f"{self.name} говорит: Гав!"
+
+    def info(self):
+        return f"{self.name} ({self.breed}), {self.age} лет"
+
+
+rex = Dog("Рекс", "Немецкая овчарка", 3)
+buddy = Dog("Бадди", "Лабрадор", 5)
+
+print(rex.bark())   # Рекс говорит: Гав!
+print(buddy.info()) # Бадди (Лабрадор), 5 лет
+print(rex.name)     # Рекс</code></pre>
+            </div>
+
+            <h3>Атрибуты класса vs атрибуты экземпляра</h3>
+            <p>Атрибуты класса разделяются всеми экземплярами, а атрибуты экземпляра — уникальны для каждого объекта.</p>
+
+            <div class="example-box">
+                <h4>Атрибуты класса и экземпляра</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Counter:
+    count = 0  # атрибут класса
+
+    def __init__(self, name):
+        Counter.count += 1
+        self.name = name      # атрибут экземпляра
+        self.id = Counter.count
+
+    def __repr__(self):
+        return f"Counter(name={self.name!r}, id={self.id})"
+
+
+a = Counter("alpha")
+b = Counter("beta")
+c = Counter("gamma")
+
+print(a)             # Counter(name='alpha', id=1)
+print(b)             # Counter(name='beta', id=2)
+print(Counter.count) # 3 — одно значение для всех</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Метод <code>__init__</code> — это инициализатор, а не конструктор</h4>
+                <p>Технически конструктором в Python является <code>__new__</code>, который создаёт объект.
+                    <code>__init__</code> лишь инициализирует уже созданный объект. В повседневной работе
+                    переопределяют именно <code>__init__</code>.</p>
+            </div>
+
+            <h3>Удаление атрибутов и объектов</h3>
+
+            <div class="example-box">
+                <h4>del и __del__</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Resource:
+    def __init__(self, name):
+        self.name = name
+        print(f"Ресурс {self.name} создан")
+
+    def __del__(self):
+        print(f"Ресурс {self.name} освобождён")
+
+
+r = Resource("файл")  # Ресурс файл создан
+del r                 # Ресурс файл освобождён</code></pre>
+            </div>
+
+            <div class="warning">
+                <h4>Осторожно с <code>__del__</code></h4>
+                <p>Не полагайтесь на <code>__del__</code> для критически важной логики освобождения ресурсов —
+                    время его вызова не гарантировано. Используйте контекстный менеджер (<code>with</code> +
+                    <code>__enter__</code>/<code>__exit__</code>) для детерминированного управления ресурсами.</p>
+            </div>
+        </section>
+
+        <!-- НАСЛЕДОВАНИЕ -->
+        <section id="inheritance" class="section">
+            <h2>Наследование и <code>super()</code></h2>
+            <p>Наследование позволяет создать новый класс (<strong>дочерний</strong>) на основе существующего
+                (<strong>родительского</strong>), переиспользуя и расширяя его функциональность.</p>
+
+            <div class="syntax-block">
+                <pre><code>class Дочерний(Родительский):
+    def __init__(self, ...):
+        super().__init__(...)  # вызов __init__ родителя
+        self.доп_атрибут = ...</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Базовый пример: животные</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Animal:
+    def __init__(self, name, sound):
+        self.name = name
+        self.sound = sound
+
+    def speak(self):
+        return f"{self.name} говорит: {self.sound}"
+
+    def __str__(self):
+        return f"Animal({self.name!r})"
+
+
+class Dog(Animal):
+    def __init__(self, name):
+        super().__init__(name, "Гав!")
+        self.tricks = []
+
+    def learn_trick(self, trick):
+        self.tricks.append(trick)
+        return f"{self.name} научился: {trick}"
+
+
+class Cat(Animal):
+    def __init__(self, name, indoor=True):
+        super().__init__(name, "Мяу!")
+        self.indoor = indoor
+
+
+rex = Dog("Рекс")
+print(rex.speak())              # Рекс говорит: Гав!
+print(rex.learn_trick("сидеть"))  # Рекс научился: сидеть
+
+whiskers = Cat("Усатик")
+print(whiskers.speak())         # Усатик говорит: Мяу!</code></pre>
+            </div>
+
+            <h3>Проверка принадлежности к классу</h3>
+
+            <div class="example-box">
+                <h4>isinstance и issubclass</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">print(isinstance(rex, Dog))    # True
+print(isinstance(rex, Animal)) # True — Dog наследует Animal
+print(isinstance(rex, Cat))    # False
+
+print(issubclass(Dog, Animal)) # True
+print(issubclass(Cat, Animal)) # True
+print(issubclass(Dog, Cat))    # False</code></pre>
+            </div>
+
+            <h3>Множественное наследование</h3>
+            <p>Python поддерживает множественное наследование. Порядок разрешения методов определяется алгоритмом
+                <strong>MRO</strong> (Method Resolution Order) — линеаризацией C3.</p>
+
+            <div class="example-box">
+                <h4>Множественное наследование и MRO</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Flyable:
+    def move(self):
+        return "Лечу"
+
+    def describe(self):
+        return "Умею летать"
+
+
+class Swimmable:
+    def move(self):
+        return "Плыву"
+
+    def describe(self):
+        return "Умею плавать"
+
+
+class Duck(Flyable, Swimmable):
+    def quack(self):
+        return "Кря!"
+
+
+donald = Duck()
+print(donald.move())     # Лечу — Flyable идёт первым в MRO
+print(donald.quack())    # Кря!
+
+print(Duck.__mro__)
+# (&lt;class 'Duck'&gt;, &lt;class 'Flyable'&gt;, &lt;class 'Swimmable'&gt;, &lt;class 'object'&gt;)</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Зачем <code>super()</code>, а не прямой вызов родителя?</h4>
+                <p><code>super()</code> корректно следует MRO, что особенно важно при множественном наследовании.
+                    Прямой вызов <code>Animal.__init__(self, ...)</code> может привести к пропуску инициализации
+                    одного из классов в цепочке.</p>
+            </div>
+
+            <h3>Переопределение методов</h3>
+
+            <div class="example-box">
+                <h4>Overriding — замена поведения родителя</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Shape:
+    def area(self):
+        raise NotImplementedError("Подкласс должен реализовать area()")
+
+    def describe(self):
+        return f"Фигура с площадью {self.area():.2f}"
+
+
+class Circle(Shape):
+    def __init__(self, radius):
+        self.radius = radius
+
+    def area(self):
+        import math
+        return math.pi * self.radius ** 2
+
+
+class Rectangle(Shape):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+
+c = Circle(5)
+r = Rectangle(4, 6)
+
+print(c.describe())   # Фигура с площадью 78.54
+print(r.describe())   # Фигура с площадью 24.00</code></pre>
+            </div>
+        </section>
+
+        <!-- МАГИЧЕСКИЕ МЕТОДЫ -->
+        <section id="magic-methods" class="section">
+            <h2>Магические методы</h2>
+            <p>Магические методы (dunder-методы, от <em>double underscore</em>) — это специальные методы с именами
+                вида <code>__имя__</code>. Python вызывает их автоматически в ответ на определённые операции:
+                создание объекта, сравнение, арифметику, итерацию и многое другое.</p>
+
+            <div class="important">
+                <h3>Наиболее часто используемые магические методы</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Метод</th>
+                                <th>Вызывается при</th>
+                                <th>Пример</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>__init__</code></td>
+                                <td>Создании объекта</td>
+                                <td><code>obj = MyClass()</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>__str__</code></td>
+                                <td><code>str(obj)</code>, <code>print(obj)</code></td>
+                                <td>Читаемое представление</td>
+                            </tr>
+                            <tr>
+                                <td><code>__repr__</code></td>
+                                <td><code>repr(obj)</code>, в интерактивной оболочке</td>
+                                <td>Отладочное представление</td>
+                            </tr>
+                            <tr>
+                                <td><code>__len__</code></td>
+                                <td><code>len(obj)</code></td>
+                                <td>Размер объекта</td>
+                            </tr>
+                            <tr>
+                                <td><code>__eq__</code></td>
+                                <td><code>obj1 == obj2</code></td>
+                                <td>Проверка равенства</td>
+                            </tr>
+                            <tr>
+                                <td><code>__lt__</code>, <code>__le__</code> и т.д.</td>
+                                <td><code>obj1 &lt; obj2</code></td>
+                                <td>Сравнение</td>
+                            </tr>
+                            <tr>
+                                <td><code>__add__</code>, <code>__mul__</code> и т.д.</td>
+                                <td><code>obj1 + obj2</code></td>
+                                <td>Арифметика</td>
+                            </tr>
+                            <tr>
+                                <td><code>__getitem__</code></td>
+                                <td><code>obj[key]</code></td>
+                                <td>Доступ по индексу</td>
+                            </tr>
+                            <tr>
+                                <td><code>__iter__</code>, <code>__next__</code></td>
+                                <td><code>for x in obj</code></td>
+                                <td>Итерация</td>
+                            </tr>
+                            <tr>
+                                <td><code>__contains__</code></td>
+                                <td><code>x in obj</code></td>
+                                <td>Проверка вхождения</td>
+                            </tr>
+                            <tr>
+                                <td><code>__call__</code></td>
+                                <td><code>obj()</code></td>
+                                <td>Вызов как функции</td>
+                            </tr>
+                            <tr>
+                                <td><code>__bool__</code></td>
+                                <td><code>bool(obj)</code>, <code>if obj:</code></td>
+                                <td>Истинность объекта</td>
+                            </tr>
+                            <tr>
+                                <td><code>__hash__</code></td>
+                                <td><code>hash(obj)</code></td>
+                                <td>Хеш для словарей/множеств</td>
+                            </tr>
+                            <tr>
+                                <td><code>__enter__</code>, <code>__exit__</code></td>
+                                <td><code>with obj:</code></td>
+                                <td>Контекстный менеджер</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3><code>__str__</code> и <code>__repr__</code></h3>
+
+            <div class="example-box">
+                <h4>Строковые представления объекта</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return f"Point({self.x!r}, {self.y!r})"
+
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+
+
+p = Point(3, 4)
+print(str(p))     # (3, 4)     — для пользователя
+print(repr(p))    # Point(3, 4) — для разработчика
+print(p)          # (3, 4)     — print вызывает __str__
+
+points = [Point(1, 2), Point(3, 4)]
+print(points)     # [Point(1, 2), Point(3, 4)] — в списке repr</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Правило: <code>__repr__</code> должен позволять воссоздать объект</h4>
+                <p>Идеальный <code>__repr__</code> возвращает строку, которую можно передать в <code>eval()</code>
+                    и получить эквивалентный объект. Если это невозможно — строка должна быть максимально информативной.</p>
+            </div>
+
+            <h3><code>__eq__</code>, <code>__lt__</code> и операторы сравнения</h3>
+
+            <div class="example-box">
+                <h4>Сравнение объектов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from functools import total_ordering
+
+
+@total_ordering
+class Temperature:
+    def __init__(self, celsius):
+        self.celsius = celsius
+
+    def __repr__(self):
+        return f"Temperature({self.celsius}°C)"
+
+    def __eq__(self, other):
+        if not isinstance(other, Temperature):
+            return NotImplemented
+        return self.celsius == other.celsius
+
+    def __lt__(self, other):
+        if not isinstance(other, Temperature):
+            return NotImplemented
+        return self.celsius < other.celsius
+
+
+t1 = Temperature(20)
+t2 = Temperature(35)
+t3 = Temperature(20)
+
+print(t1 == t3)  # True
+print(t1 &lt; t2)   # True
+print(t2 &gt; t1)   # True  — @total_ordering даёт __gt__ бесплатно
+print(t1 != t2)  # True
+
+temps = [t2, t1, Temperature(10)]
+print(sorted(temps))  # [Temperature(10°C), Temperature(20°C), Temperature(35°C)]</code></pre>
+            </div>
+
+            <h3><code>__len__</code>, <code>__getitem__</code> и протокол последовательности</h3>
+
+            <div class="example-box">
+                <h4>Класс-коллекция</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Playlist:
+    def __init__(self, name):
+        self.name = name
+        self._tracks = []
+
+    def add(self, track):
+        self._tracks.append(track)
+
+    def __len__(self):
+        return len(self._tracks)
+
+    def __getitem__(self, index):
+        return self._tracks[index]
+
+    def __contains__(self, track):
+        return track in self._tracks
+
+    def __iter__(self):
+        return iter(self._tracks)
+
+    def __repr__(self):
+        return f"Playlist({self.name!r}, {len(self)} треков)"
+
+
+pl = Playlist("Мой плейлист")
+pl.add("Song A")
+pl.add("Song B")
+pl.add("Song C")
+
+print(len(pl))           # 3
+print(pl[0])             # Song A
+print("Song B" in pl)    # True
+
+for track in pl:
+    print(track)
+# Song A
+# Song B
+# Song C</code></pre>
+            </div>
+
+            <h3>Арифметические магические методы</h3>
+
+            <div class="example-box">
+                <h4>Векторная арифметика</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">import math
+
+
+class Vector:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return f"Vector({self.x}, {self.y})"
+
+    def __add__(self, other):
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        return Vector(self.x - other.x, self.y - other.y)
+
+    def __mul__(self, scalar):
+        return Vector(self.x * scalar, self.y * scalar)
+
+    def __rmul__(self, scalar):
+        return self.__mul__(scalar)
+
+    def __neg__(self):
+        return Vector(-self.x, -self.y)
+
+    def __abs__(self):
+        return math.sqrt(self.x ** 2 + self.y ** 2)
+
+    def __bool__(self):
+        return self.x != 0 or self.y != 0
+
+
+v1 = Vector(1, 2)
+v2 = Vector(3, 4)
+
+print(v1 + v2)    # Vector(4, 6)
+print(v2 - v1)    # Vector(2, 2)
+print(v1 * 3)     # Vector(3, 6)
+print(3 * v1)     # Vector(3, 6) — через __rmul__
+print(-v1)        # Vector(-1, -2)
+print(abs(v2))    # 5.0
+print(bool(Vector(0, 0)))  # False</code></pre>
+            </div>
+
+            <h3><code>__call__</code> — вызываемые объекты</h3>
+
+            <div class="example-box">
+                <h4>Объект как функция</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Adder:
+    def __init__(self, step):
+        self.step = step
+
+    def __call__(self, value):
+        return value + self.step
+
+    def __repr__(self):
+        return f"Adder(step={self.step})"
+
+
+add5 = Adder(5)
+add10 = Adder(10)
+
+print(add5(3))    # 8
+print(add10(3))   # 13
+print(callable(add5))  # True
+
+numbers = [1, 2, 3, 4]
+print(list(map(add5, numbers)))  # [6, 7, 8, 9]</code></pre>
+            </div>
+
+            <h3>Контекстный менеджер: <code>__enter__</code> и <code>__exit__</code></h3>
+
+            <div class="example-box">
+                <h4>Собственный контекстный менеджер</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Timer:
+    import time as _time
+
+    def __enter__(self):
+        import time
+        self._start = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        import time
+        self.elapsed = time.perf_counter() - self._start
+        print(f"Прошло: {self.elapsed:.4f} сек")
+        return False  # не подавлять исключения
+
+
+with Timer() as t:
+    total = sum(range(1_000_000))
+
+print(f"Сумма: {total}")
+# Прошло: 0.0123 сек
+# Сумма: 499999500000</code></pre>
+            </div>
+        </section>
+
+        <!-- ПОЛИМОРФИЗМ -->
+        <section id="polymorphism" class="section">
+            <h2>Полиморфизм</h2>
+            <p>Полиморфизм (<em>от греч. «многоформность»</em>) — способность объектов разных типов реагировать
+                на один и тот же интерфейс. В Python полиморфизм достигается через <strong>переопределение методов</strong>,
+                <strong>утиную типизацию</strong> и <strong>абстрактные классы</strong>.</p>
+
+            <div class="important">
+                <h3>Утиная типизация</h3>
+                <p>«Если это выглядит как утка, крякает как утка — это утка.» Python не требует явного наследования;
+                    достаточно, чтобы объект поддерживал нужный интерфейс (имел нужные методы/атрибуты).</p>
+            </div>
+
+            <div class="example-box">
+                <h4>Полиморфизм через переопределение методов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Shape:
+    def area(self):
+        raise NotImplementedError
+
+    def perimeter(self):
+        raise NotImplementedError
+
+    def describe(self):
+        return (
+            f"{type(self).__name__}: "
+            f"площадь={self.area():.2f}, "
+            f"периметр={self.perimeter():.2f}"
+        )
+
+
+class Circle(Shape):
+    def __init__(self, r):
+        self.r = r
+
+    def area(self):
+        import math
+        return math.pi * self.r ** 2
+
+    def perimeter(self):
+        import math
+        return 2 * math.pi * self.r
+
+
+class Rectangle(Shape):
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+
+    def area(self):
+        return self.w * self.h
+
+    def perimeter(self):
+        return 2 * (self.w + self.h)
+
+
+class Triangle(Shape):
+    def __init__(self, a, b, c):
+        self.a, self.b, self.c = a, b, c
+
+    def area(self):
+        s = self.perimeter() / 2
+        return (s * (s - self.a) * (s - self.b) * (s - self.c)) ** 0.5
+
+    def perimeter(self):
+        return self.a + self.b + self.c
+
+
+shapes = [Circle(5), Rectangle(4, 6), Triangle(3, 4, 5)]
+
+for shape in shapes:
+    print(shape.describe())
+# Circle: площадь=78.54, периметр=31.42
+# Rectangle: площадь=24.00, периметр=20.00
+# Triangle: площадь=6.00, периметр=12.00</code></pre>
+            </div>
+
+            <h3>Утиная типизация на практике</h3>
+
+            <div class="example-box">
+                <h4>Без общего родителя — полиморфизм через интерфейс</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class PDFReport:
+    def render(self):
+        return "Рендеринг PDF"
+
+
+class HTMLReport:
+    def render(self):
+        return "Рендеринг HTML"
+
+
+class ConsoleReport:
+    def render(self):
+        return "Вывод в консоль"
+
+
+def print_all_reports(reports):
+    for report in reports:
+        print(report.render())
+
+
+reports = [PDFReport(), HTMLReport(), ConsoleReport()]
+print_all_reports(reports)
+# Рендеринг PDF
+# Рендеринг HTML
+# Вывод в консоль</code></pre>
+            </div>
+
+            <h3>Абстрактные классы</h3>
+            <p>Модуль <code>abc</code> позволяет объявить интерфейс явно: абстрактный класс нельзя создать,
+                не реализовав все его абстрактные методы.</p>
+
+            <div class="example-box">
+                <h4>Использование ABC и abstractmethod</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from abc import ABC, abstractmethod
+
+
+class Serializable(ABC):
+    @abstractmethod
+    def serialize(self) -> str:
+        """Преобразует объект в строку."""
+
+    @abstractmethod
+    def deserialize(self, data: str):
+        """Восстанавливает объект из строки."""
+
+    def save_to_file(self, path: str):
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(self.serialize())
+
+
+class JSONUser(Serializable):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def serialize(self) -> str:
+        import json
+        return json.dumps({"name": self.name, "age": self.age})
+
+    def deserialize(self, data: str):
+        import json
+        d = json.loads(data)
+        self.name = d["name"]
+        self.age = d["age"]
+        return self
+
+
+user = JSONUser("Алиса", 30)
+print(user.serialize())  # {"name": "\u0410\u043b\u0438\u0441\u0430", "age": 30}
+
+# Попытка создать экземпляр ABC вызовет TypeError:
+# s = Serializable()  # TypeError: Can't instantiate abstract class</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Проверка реализации интерфейса</h4>
+                <p><code>isinstance(obj, Serializable)</code> вернёт <code>True</code>, если класс объекта
+                    наследует <code>Serializable</code> и реализует все абстрактные методы. Это позволяет
+                    строить надёжные, самодокументирующиеся интерфейсы.</p>
+            </div>
+        </section>
+
+        <!-- ИНКАПСУЛЯЦИЯ -->
+        <section id="encapsulation" class="section">
+            <h2>Инкапсуляция</h2>
+            <p>Инкапсуляция — сокрытие внутренней реализации объекта и предоставление контролируемого
+                доступа к данным через публичный интерфейс. В Python используется соглашение об именовании
+                и механизм <em>name mangling</em>.</p>
+
+            <div class="important">
+                <h3>Уровни доступа в Python</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Именование</th>
+                                <th>Уровень</th>
+                                <th>Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>attr</code></td>
+                                <td>Публичный</td>
+                                <td>Доступен всем</td>
+                            </tr>
+                            <tr>
+                                <td><code>_attr</code></td>
+                                <td>Защищённый (условно)</td>
+                                <td>Соглашение: «только для внутреннего использования»</td>
+                            </tr>
+                            <tr>
+                                <td><code>__attr</code></td>
+                                <td>Приватный (name mangling)</td>
+                                <td>Python переименует в <code>_ClassName__attr</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>Одинарное и двойное подчёркивание</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner          # публичный
+        self._transaction_log = []  # защищённый (соглашение)
+        self.__balance = balance    # приватный (name mangling)
+
+    def deposit(self, amount):
+        if amount &lt;= 0:
+            raise ValueError("Сумма должна быть положительной")
+        self.__balance += amount
+        self._transaction_log.append(f"+{amount}")
+
+    def withdraw(self, amount):
+        if amount &lt;= 0:
+            raise ValueError("Сумма должна быть положительной")
+        if amount &gt; self.__balance:
+            raise ValueError("Недостаточно средств")
+        self.__balance -= amount
+        self._transaction_log.append(f"-{amount}")
+
+    def get_balance(self):
+        return self.__balance
+
+    def __repr__(self):
+        return f"BankAccount({self.owner!r}, balance={self.__balance})"
+
+
+acc = BankAccount("Алиса", 1000)
+acc.deposit(500)
+acc.withdraw(200)
+
+print(acc.get_balance())        # 1300
+print(acc._transaction_log)     # ['+500', '-200']
+
+# acc.__balance                 # AttributeError!
+print(acc._BankAccount__balance)  # 1300 — можно обойти, но не нужно</code></pre>
+            </div>
+
+            <div class="common-mistake">
+                <h4>Python не имеет настоящей приватности</h4>
+                <p>Name mangling (<code>__attr</code> → <code>_ClassName__attr</code>) — это защита от случайных
+                    коллизий при наследовании, а не полноценная инкапсуляция. Технически атрибут
+                    <code>__balance</code> можно прочитать как <code>_BankAccount__balance</code>.
+                    Инкапсуляция в Python — это соглашение, которое разработчики уважают, а не языковое ограничение.</p>
+            </div>
+
+            <h3>Слоты (<code>__slots__</code>)</h3>
+            <p><code>__slots__</code> явно ограничивает набор атрибутов экземпляра, экономит память и
+                ускоряет доступ к атрибутам за счёт отказа от внутреннего словаря <code>__dict__</code>.</p>
+
+            <div class="example-box">
+                <h4>Использование __slots__</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Point:
+    __slots__ = ("x", "y")
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def distance(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+
+p = Point(3, 4)
+print(p.distance())  # 5.0
+
+# p.z = 10  # AttributeError: 'Point' object has no attribute 'z'
+# print(p.__dict__)  # AttributeError: 'Point' object has no attribute '__dict__'</code></pre>
+            </div>
+        </section>
+
+        <!-- МЕТОДЫ КЛАССА И СТАТИЧЕСКИЕ МЕТОДЫ -->
+        <section id="class-static" class="section">
+            <h2>Методы класса и статические методы</h2>
+            <p>Помимо обычных методов экземпляра, Python поддерживает <strong>методы класса</strong>
+                (<code>@classmethod</code>) и <strong>статические методы</strong> (<code>@staticmethod</code>).</p>
+
+            <div class="important">
+                <h3>Три вида методов</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Декоратор</th>
+                                <th>Первый параметр</th>
+                                <th>Доступ к</th>
+                                <th>Когда использовать</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>нет</td>
+                                <td><code>self</code></td>
+                                <td>экземпляру и классу</td>
+                                <td>Большинство методов</td>
+                            </tr>
+                            <tr>
+                                <td><code>@classmethod</code></td>
+                                <td><code>cls</code></td>
+                                <td>только классу</td>
+                                <td>Альтернативные конструкторы, фабрики</td>
+                            </tr>
+                            <tr>
+                                <td><code>@staticmethod</code></td>
+                                <td>нет</td>
+                                <td>ничему</td>
+                                <td>Вспомогательные функции, логически связанные с классом</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>classmethod как альтернативный конструктор</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Date:
+    def __init__(self, year, month, day):
+        self.year = year
+        self.month = month
+        self.day = day
+
+    @classmethod
+    def from_string(cls, date_str):
+        year, month, day = map(int, date_str.split("-"))
+        return cls(year, month, day)
+
+    @classmethod
+    def today(cls):
+        import datetime
+        d = datetime.date.today()
+        return cls(d.year, d.month, d.day)
+
+    @staticmethod
+    def is_leap_year(year):
+        return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+
+    def __repr__(self):
+        return f"Date({self.year}, {self.month:02d}, {self.day:02d})"
+
+
+d1 = Date(2024, 3, 15)
+d2 = Date.from_string("2024-07-04")
+d3 = Date.today()
+
+print(d1)  # Date(2024, 03, 15)
+print(d2)  # Date(2024, 07, 04)
+
+print(Date.is_leap_year(2024))  # True
+print(Date.is_leap_year(2023))  # False</code></pre>
+            </div>
+        </section>
+
+        <!-- СВОЙСТВА (PROPERTY) -->
+        <section id="properties" class="section">
+            <h2>Свойства (<code>property</code>)</h2>
+            <p>Декоратор <code>@property</code> позволяет создавать управляемые атрибуты: обращение к
+                атрибуту внешне выглядит как доступ к полю, но внутри вызывается метод. Это ключевой
+                инструмент инкапсуляции в Python.</p>
+
+            <div class="syntax-block">
+                <pre><code>@property
+def имя(self):           # getter — вызывается при чтении obj.имя
+    return self._имя
+
+@имя.setter
+def имя(self, value):    # setter — вызывается при записи obj.имя = value
+    self._имя = value
+
+@имя.deleter
+def имя(self):           # deleter — вызывается при del obj.имя
+    del self._имя</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Валидация через property</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Circle:
+    def __init__(self, radius):
+        self.radius = radius  # вызывает setter
+
+    @property
+    def radius(self):
+        return self._radius
+
+    @radius.setter
+    def radius(self, value):
+        if value &lt; 0:
+            raise ValueError(f"Радиус не может быть отрицательным: {value}")
+        self._radius = value
+
+    @property
+    def diameter(self):
+        return self._radius * 2
+
+    @property
+    def area(self):
+        import math
+        return math.pi * self._radius ** 2
+
+    def __repr__(self):
+        return f"Circle(radius={self._radius})"
+
+
+c = Circle(5)
+print(c.radius)    # 5
+print(c.diameter)  # 10
+print(f"{c.area:.2f}")  # 78.54
+
+c.radius = 7
+print(c.diameter)  # 14
+
+# c.radius = -1    # ValueError: Радиус не может быть отрицательным: -1</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Вычисляемые свойства — температура</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Temperature:
+    def __init__(self, celsius=0):
+        self.celsius = celsius
+
+    @property
+    def celsius(self):
+        return self._celsius
+
+    @celsius.setter
+    def celsius(self, value):
+        if value &lt; -273.15:
+            raise ValueError("Температура ниже абсолютного нуля!")
+        self._celsius = value
+
+    @property
+    def fahrenheit(self):
+        return self._celsius * 9 / 5 + 32
+
+    @fahrenheit.setter
+    def fahrenheit(self, value):
+        self.celsius = (value - 32) * 5 / 9
+
+    @property
+    def kelvin(self):
+        return self._celsius + 273.15
+
+    def __repr__(self):
+        return f"{self._celsius}°C / {self.fahrenheit:.1f}°F / {self.kelvin:.2f}K"
+
+
+t = Temperature(100)
+print(t)            # 100°C / 212.0°F / 373.15K
+
+t.fahrenheit = 32
+print(t)            # 0.0°C / 32.0°F / 273.15K</code></pre>
+            </div>
+        </section>
+
+        <!-- DATACLASSES -->
+        <section id="dataclasses" class="section">
+            <h2>Dataclasses</h2>
+            <p>Декоратор <code>@dataclass</code> из модуля <code>dataclasses</code> автоматически генерирует
+                <code>__init__</code>, <code>__repr__</code>, <code>__eq__</code> и другие методы на основе
+                аннотаций типов. Это современный и лаконичный способ создания классов-данных.</p>
+
+            <div class="example-box">
+                <h4>Сравнение обычного класса и dataclass</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from dataclasses import dataclass, field
+from typing import List
+
+
+# Обычный класс — много шаблонного кода
+class ProductOld:
+    def __init__(self, name, price, tags=None):
+        self.name = name
+        self.price = price
+        self.tags = tags if tags is not None else []
+
+    def __repr__(self):
+        return f"Product(name={self.name!r}, price={self.price}, tags={self.tags})"
+
+    def __eq__(self, other):
+        return (self.name, self.price) == (other.name, other.price)
+
+
+# dataclass — минимум кода
+@dataclass
+class Product:
+    name: str
+    price: float
+    tags: List[str] = field(default_factory=list)
+
+    def discounted(self, percent: float) -> "Product":
+        return Product(self.name, self.price * (1 - percent / 100), self.tags)
+
+
+p1 = Product("Кофе", 250.0, ["горячие", "напитки"])
+p2 = Product("Кофе", 250.0)
+p3 = p1.discounted(10)
+
+print(p1)             # Product(name='Кофе', price=250.0, tags=['горячие', 'напитки'])
+print(p1 == p2)       # True — __eq__ сгенерирован
+print(p3.price)       # 225.0</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Параметры @dataclass</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from dataclasses import dataclass
+
+
+@dataclass(frozen=True, order=True)
+class Point:
+    x: float
+    y: float
+
+    def distance(self) -> float:
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+
+p1 = Point(0, 0)
+p2 = Point(3, 4)
+p3 = Point(1, 1)
+
+print(p2.distance())     # 5.0
+print(sorted([p2, p1, p3]))  # [Point(x=0, y=0), Point(x=1, y=1), Point(x=3, y=4)]
+
+# p1.x = 5  # FrozenInstanceError — frozen=True запрещает изменения
+
+# frozen=True позволяет использовать объект как ключ словаря
+coords = {p1: "начало координат", p2: "точка B"}
+print(coords[Point(0, 0)])  # начало координат</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Параметры декоратора <code>@dataclass</code></h4>
+                <ul>
+                    <li><code>eq=True</code> — генерировать <code>__eq__</code> (по умолчанию).</li>
+                    <li><code>order=True</code> — генерировать методы сравнения (<code>&lt;</code>, <code>&gt;</code> и т.д.).</li>
+                    <li><code>frozen=True</code> — запретить изменение атрибутов (иммутабельность).</li>
+                    <li><code>slots=True</code> — использовать <code>__slots__</code> (Python 3.10+).</li>
+                    <li><code>kw_only=True</code> — все поля принимаются только как keyword-аргументы (Python 3.10+).</li>
+                </ul>
+            </div>
+
+            <div class="success">
+                <h4>Итого: что выбрать?</h4>
+                <ul>
+                    <li>Нужна полная логика (методы, сложная инициализация) → <strong>обычный класс</strong>.</li>
+                    <li>Класс в основном хранит данные → <strong><code>@dataclass</code></strong>.</li>
+                    <li>Иммутабельный объект-значение → <strong><code>@dataclass(frozen=True)</code></strong>.</li>
+                    <li>Нужен именованный кортеж → <strong><code>typing.NamedTuple</code></strong>.</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+</div>
+<script src="../assets/js/prism.js"></script>
+<script src="../assets/js/script.js"></script>
+</body>
+</html>
