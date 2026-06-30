@@ -15,3 +15,16 @@ def timeout(seconds):
             thread.join(timeout = seconds)
             if thread.is_alive():
                 raise TimeoutError('Функция выполняется слишком долго')
+            return result
+        return wrapper
+    return decorator
+
+@timeout(3)
+def f():
+    time.sleep(2)
+    return -10
+
+try:
+    f()
+except Exception as e:
+    print(e)
