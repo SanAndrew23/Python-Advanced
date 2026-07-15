@@ -159,3 +159,27 @@ except NegativeValueError as e:
     print(f'Ошибка: {e}')
 '''
 #7.2 Расширенный вариант
+'''class InsufficientFundsError(Exception):
+    def __init__(self, balance,  amount):
+        self.balance = balance
+        self.amount = amount
+        super().__init__(f'Недостаточно средств. Баланс: {balance}, требуется: {amount}')
+
+class BankAccount:
+    def __init__(self, balance):
+        self.balance = balance
+
+    def withdraw(self, amount):
+        if amount > self.balance:
+            raise InsufficientFundsError(self.balance, amount)
+        self.balance -= amount
+        return amount
+
+account = BankAccount(100)
+
+try:
+    account.withdraw(200)
+except InsufficientFundsError as e:
+    print(f'Ошибка {e}')
+    print(f'Текущий баланс: {e.balance}')'''
+
