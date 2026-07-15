@@ -18,13 +18,13 @@
 
     <nav class="nav">
         <ul>
-            <li><a href="#classes-objects">🔹 Классы и объекты, __init__</a></li>
-            <li><a href="#inheritance">🔹 Наследование и super()</a></li>
-            <li><a href="#magic-methods">🔹 Магические методы</a></li>
-            <li><a href="#polymorphism">🔹 Полиморфизм</a></li>
+            <li><a href="#classes-objects">🔹 Классы и объекты, конструктор</a></li>
             <li><a href="#encapsulation">🔹 Инкапсуляция</a></li>
+            <li><a href="#magic-methods">🔹 Магические методы</a></li>
             <li><a href="#class-static">🔹 Методы класса и статические методы</a></li>
             <li><a href="#properties">🔹 Свойства (property)</a></li>
+            <li><a href="#inheritance">🔹 Наследование и super()</a></li>
+            <li><a href="#polymorphism">🔹 Полиморфизм</a></li>
             <li><a href="#dataclasses">🔹 dataclasses</a></li>
         </ul>
     </nav>
@@ -141,147 +141,115 @@ del r                 # Ресурс файл освобождён</code></pre>
             </div>
         </section>
 
-        <!-- НАСЛЕДОВАНИЕ -->
-        <section id="inheritance" class="section">
-            <h2>Наследование и <code>super()</code></h2>
-            <p>Наследование позволяет создать новый класс (<strong>дочерний</strong>) на основе существующего
-                (<strong>родительского</strong>), переиспользуя и расширяя его функциональность.</p>
+        <!-- ИНКАПСУЛЯЦИЯ -->
+        <section id="encapsulation" class="section">
+            <h2>Инкапсуляция</h2>
+            <p>Инкапсуляция — сокрытие внутренней реализации объекта и предоставление контролируемого
+                доступа к данным через публичный интерфейс. В Python используется соглашение об именовании
+                и механизм <em>name mangling</em>.</p>
 
-            <div class="syntax-block">
-                <pre><code>class Дочерний(Родительский):
-    def __init__(self, ...):
-        super().__init__(...)  # вызов __init__ родителя
-        self.доп_атрибут = ...</code></pre>
+            <div class="important">
+                <h3>Уровни доступа в Python</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Именование</th>
+                                <th>Уровень</th>
+                                <th>Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>attr</code></td>
+                                <td>Публичный</td>
+                                <td>Доступен всем</td>
+                            </tr>
+                            <tr>
+                                <td><code>_attr</code></td>
+                                <td>Защищённый (условно)</td>
+                                <td>Соглашение: «только для внутреннего использования»</td>
+                            </tr>
+                            <tr>
+                                <td><code>__attr</code></td>
+                                <td>Приватный (name mangling)</td>
+                                <td>Python переименует в <code>_ClassName__attr</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="example-box">
-                <h4>Базовый пример: животные</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">class Animal:
-    def __init__(self, name, sound):
-        self.name = name
-        self.sound = sound
+                <h4>Одинарное и двойное подчёркивание</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner          # публичный
+        self._transaction_log = []  # защищённый (соглашение)
+        self.__balance = balance    # приватный (name mangling)
 
-    def speak(self):
-        return f"{self.name} говорит: {self.sound}"
+    def deposit(self, amount):
+        if amount &lt;= 0:
+            raise ValueError("Сумма должна быть положительной")
+        self.__balance += amount
+        self._transaction_log.append(f"+{amount}")
 
-    def __str__(self):
-        return f"Animal({self.name!r})"
+    def withdraw(self, amount):
+        if amount &lt;= 0:
+            raise ValueError("Сумма должна быть положительной")
+        if amount &gt; self.__balance:
+            raise ValueError("Недостаточно средств")
+        self.__balance -= amount
+        self._transaction_log.append(f"-{amount}")
 
+    def get_balance(self):
+        return self.__balance
 
-class Dog(Animal):
-    def __init__(self, name):
-        super().__init__(name, "Гав!")
-        self.tricks = []
-
-    def learn_trick(self, trick):
-        self.tricks.append(trick)
-        return f"{self.name} научился: {trick}"
-
-
-class Cat(Animal):
-    def __init__(self, name, indoor=True):
-        super().__init__(name, "Мяу!")
-        self.indoor = indoor
+    def __repr__(self):
+        return f"BankAccount({self.owner!r}, balance={self.__balance})"
 
 
-rex = Dog("Рекс")
-print(rex.speak())              # Рекс говорит: Гав!
-print(rex.learn_trick("сидеть"))  # Рекс научился: сидеть
+acc = BankAccount("Алиса", 1000)
+acc.deposit(500)
+acc.withdraw(200)
 
-whiskers = Cat("Усатик")
-print(whiskers.speak())         # Усатик говорит: Мяу!</code></pre>
+print(acc.get_balance())        # 1300
+print(acc._transaction_log)     # ['+500', '-200']
+
+# acc.__balance                 # AttributeError!
+print(acc._BankAccount__balance)  # 1300 — можно обойти, но не нужно</code></pre>
             </div>
 
-            <h3>Проверка принадлежности к классу</h3>
+            <div class="common-mistake">
+                <h4>Python не имеет настоящей приватности</h4>
+                <p>Name mangling (<code>__attr</code> → <code>_ClassName__attr</code>) — это защита от случайных
+                    коллизий при наследовании, а не полноценная инкапсуляция. Технически атрибут
+                    <code>__balance</code> можно прочитать как <code>_BankAccount__balance</code>.
+                    Инкапсуляция в Python — это соглашение, которое разработчики уважают, а не языковое ограничение.</p>
+            </div>
+
+            <h3>Слоты (<code>__slots__</code>)</h3>
+            <p><code>__slots__</code> явно ограничивает набор атрибутов экземпляра, экономит память и
+                ускоряет доступ к атрибутам за счёт отказа от внутреннего словаря <code>__dict__</code>.</p>
 
             <div class="example-box">
-                <h4>isinstance и issubclass</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">print(isinstance(rex, Dog))    # True
-print(isinstance(rex, Animal)) # True — Dog наследует Animal
-print(isinstance(rex, Cat))    # False
+                <h4>Использование __slots__</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Point:
+    __slots__ = ("x", "y")
 
-print(issubclass(Dog, Animal)) # True
-print(issubclass(Cat, Animal)) # True
-print(issubclass(Dog, Cat))    # False</code></pre>
-            </div>
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
-            <h3>Множественное наследование</h3>
-            <p>Python поддерживает множественное наследование. Порядок разрешения методов определяется алгоритмом
-                <strong>MRO</strong> (Method Resolution Order) — линеаризацией C3.</p>
-
-            <div class="example-box">
-                <h4>Множественное наследование и MRO</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">class Flyable:
-    def move(self):
-        return "Лечу"
-
-    def describe(self):
-        return "Умею летать"
+    def distance(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
 
 
-class Swimmable:
-    def move(self):
-        return "Плыву"
+p = Point(3, 4)
+print(p.distance())  # 5.0
 
-    def describe(self):
-        return "Умею плавать"
-
-
-class Duck(Flyable, Swimmable):
-    def quack(self):
-        return "Кря!"
-
-
-donald = Duck()
-print(donald.move())     # Лечу — Flyable идёт первым в MRO
-print(donald.quack())    # Кря!
-
-print(Duck.__mro__)
-# (&lt;class 'Duck'&gt;, &lt;class 'Flyable'&gt;, &lt;class 'Swimmable'&gt;, &lt;class 'object'&gt;)</code></pre>
-            </div>
-
-            <div class="note">
-                <h4>Зачем <code>super()</code>, а не прямой вызов родителя?</h4>
-                <p><code>super()</code> корректно следует MRO, что особенно важно при множественном наследовании.
-                    Прямой вызов <code>Animal.__init__(self, ...)</code> может привести к пропуску инициализации
-                    одного из классов в цепочке.</p>
-            </div>
-
-            <h3>Переопределение методов</h3>
-
-            <div class="example-box">
-                <h4>Overriding — замена поведения родителя</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">class Shape:
-    def area(self):
-        raise NotImplementedError("Подкласс должен реализовать area()")
-
-    def describe(self):
-        return f"Фигура с площадью {self.area():.2f}"
-
-
-class Circle(Shape):
-    def __init__(self, radius):
-        self.radius = radius
-
-    def area(self):
-        import math
-        return math.pi * self.radius ** 2
-
-
-class Rectangle(Shape):
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-
-    def area(self):
-        return self.width * self.height
-
-
-c = Circle(5)
-r = Rectangle(4, 6)
-
-print(c.describe())   # Фигура с площадью 78.54
-print(r.describe())   # Фигура с площадью 24.00</code></pre>
+# p.z = 10  # AttributeError: 'Point' object has no attribute 'z'
+# print(p.__dict__)  # AttributeError: 'Point' object has no attribute '__dict__'</code></pre>
             </div>
         </section>
 
@@ -300,14 +268,30 @@ print(r.describe())   # Фигура с площадью 24.00</code></pre>
                             <tr>
                                 <th>Метод</th>
                                 <th>Вызывается при</th>
-                                <th>Пример</th>
+                                <th>Категория</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
+                                <td colspan="3"><strong>Инициализация и удаление</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__new__</code></td>
+                                <td>Создание объекта (перед __init__)</td>
+                                <td>Конструктор</td>
+                            </tr>
+                            <tr>
                                 <td><code>__init__</code></td>
-                                <td>Создании объекта</td>
-                                <td><code>obj = MyClass()</code></td>
+                                <td>Инициализация объекта</td>
+                                <td>Инициализатор</td>
+                            </tr>
+                            <tr>
+                                <td><code>__del__</code></td>
+                                <td>Удаление объекта (финализатор)</td>
+                                <td>Деструктор</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Строковые представления</strong></td>
                             </tr>
                             <tr>
                                 <td><code>__str__</code></td>
@@ -316,38 +300,279 @@ print(r.describe())   # Фигура с площадью 24.00</code></pre>
                             </tr>
                             <tr>
                                 <td><code>__repr__</code></td>
-                                <td><code>repr(obj)</code>, в интерактивной оболочке</td>
+                                <td><code>repr(obj)</code>, в интерпретаторе</td>
                                 <td>Отладочное представление</td>
                             </tr>
                             <tr>
-                                <td><code>__len__</code></td>
-                                <td><code>len(obj)</code></td>
-                                <td>Размер объекта</td>
+                                <td><code>__format__</code></td>
+                                <td><code>format(obj, spec)</code>, f-строки</td>
+                                <td>Форматирование</td>
+                            </tr>
+                            <tr>
+                                <td><code>__bytes__</code></td>
+                                <td><code>bytes(obj)</code></td>
+                                <td>Представление в байтах</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Операторы сравнения</strong></td>
                             </tr>
                             <tr>
                                 <td><code>__eq__</code></td>
                                 <td><code>obj1 == obj2</code></td>
-                                <td>Проверка равенства</td>
+                                <td>Равенство</td>
                             </tr>
                             <tr>
-                                <td><code>__lt__</code>, <code>__le__</code> и т.д.</td>
+                                <td><code>__ne__</code></td>
+                                <td><code>obj1 != obj2</code></td>
+                                <td>Неравенство</td>
+                            </tr>
+                            <tr>
+                                <td><code>__lt__</code></td>
                                 <td><code>obj1 &lt; obj2</code></td>
-                                <td>Сравнение</td>
+                                <td>Меньше</td>
                             </tr>
                             <tr>
-                                <td><code>__add__</code>, <code>__mul__</code> и т.д.</td>
+                                <td><code>__le__</code></td>
+                                <td><code>obj1 &lt;= obj2</code></td>
+                                <td>Меньше или равно</td>
+                            </tr>
+                            <tr>
+                                <td><code>__gt__</code></td>
+                                <td><code>obj1 &gt; obj2</code></td>
+                                <td>Больше</td>
+                            </tr>
+                            <tr>
+                                <td><code>__ge__</code></td>
+                                <td><code>obj1 &gt;= obj2</code></td>
+                                <td>Больше или равно</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Арифметические операции</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__add__</code></td>
                                 <td><code>obj1 + obj2</code></td>
-                                <td>Арифметика</td>
+                                <td>Сложение</td>
+                            </tr>
+                            <tr>
+                                <td><code>__sub__</code></td>
+                                <td><code>obj1 - obj2</code></td>
+                                <td>Вычитание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__mul__</code></td>
+                                <td><code>obj1 * obj2</code></td>
+                                <td>Умножение</td>
+                            </tr>
+                            <tr>
+                                <td><code>__truediv__</code></td>
+                                <td><code>obj1 / obj2</code></td>
+                                <td>Деление</td>
+                            </tr>
+                            <tr>
+                                <td><code>__floordiv__</code></td>
+                                <td><code>obj1 // obj2</code></td>
+                                <td>Целочисленное деление</td>
+                            </tr>
+                            <tr>
+                                <td><code>__mod__</code></td>
+                                <td><code>obj1 % obj2</code></td>
+                                <td>Остаток от деления</td>
+                            </tr>
+                            <tr>
+                                <td><code>__pow__</code></td>
+                                <td><code>obj1 ** obj2</code></td>
+                                <td>Возведение в степень</td>
+                            </tr>
+                            <tr>
+                                <td><code>__divmod__</code></td>
+                                <td><code>divmod(obj1, obj2)</code></td>
+                                <td>Деление с остатком</td>
+                            </tr>
+                            <tr>
+                                <td><code>__neg__</code></td>
+                                <td><code>-obj</code></td>
+                                <td>Унарный минус</td>
+                            </tr>
+                            <tr>
+                                <td><code>__pos__</code></td>
+                                <td><code>+obj</code></td>
+                                <td>Унарный плюс</td>
+                            </tr>
+                            <tr>
+                                <td><code>__abs__</code></td>
+                                <td><code>abs(obj)</code></td>
+                                <td>Абсолютное значение</td>
+                            </tr>
+                            <tr>
+                                <td><code>__invert__</code></td>
+                                <td><code>~obj</code></td>
+                                <td>Побитовое НЕ</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Операции с отраженными операндами</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__radd__</code></td>
+                                <td><code>value + obj</code> (когда value.__add__(obj) не определён)</td>
+                                <td>Правое сложение</td>
+                            </tr>
+                            <tr>
+                                <td><code>__rsub__</code></td>
+                                <td><code>value - obj</code></td>
+                                <td>Правое вычитание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__rmul__</code></td>
+                                <td><code>value * obj</code></td>
+                                <td>Правое умножение</td>
+                            </tr>
+                            <tr>
+                                <td><code>__rtruediv__</code></td>
+                                <td><code>value / obj</code></td>
+                                <td>Правое деление</td>
+                            </tr>
+                            <tr>
+                                <td><code>__rfloordiv__</code></td>
+                                <td><code>value // obj</code></td>
+                                <td>Правое целочисленное деление</td>
+                            </tr>
+                            <tr>
+                                <td><code>__rmod__</code></td>
+                                <td><code>value % obj</code></td>
+                                <td>Правый остаток</td>
+                            </tr>
+                            <tr>
+                                <td><code>__rpow__</code></td>
+                                <td><code>value ** obj</code></td>
+                                <td>Правая степень</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Операции с присваиванием</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__iadd__</code></td>
+                                <td><code>obj += value</code></td>
+                                <td>Сложение и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__isub__</code></td>
+                                <td><code>obj -= value</code></td>
+                                <td>Вычитание и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__imul__</code></td>
+                                <td><code>obj *= value</code></td>
+                                <td>Умножение и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__itruediv__</code></td>
+                                <td><code>obj /= value</code></td>
+                                <td>Деление и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__ifloordiv__</code></td>
+                                <td><code>obj //= value</code></td>
+                                <td>Целочисленное деление и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__imod__</code></td>
+                                <td><code>obj %= value</code></td>
+                                <td>Остаток и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__ipow__</code></td>
+                                <td><code>obj **= value</code></td>
+                                <td>Степень и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Побитовые операции</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__and__</code></td>
+                                <td><code>obj1 &amp; obj2</code></td>
+                                <td>Побитовое И</td>
+                            </tr>
+                            <tr>
+                                <td><code>__or__</code></td>
+                                <td><code>obj1 | obj2</code></td>
+                                <td>Побитовое ИЛИ</td>
+                            </tr>
+                            <tr>
+                                <td><code>__xor__</code></td>
+                                <td><code>obj1 ^ obj2</code></td>
+                                <td>Побитовое исключающее ИЛИ</td>
+                            </tr>
+                            <tr>
+                                <td><code>__lshift__</code></td>
+                                <td><code>obj1 &lt;&lt; obj2</code></td>
+                                <td>Побитовый сдвиг влево</td>
+                            </tr>
+                            <tr>
+                                <td><code>__rshift__</code></td>
+                                <td><code>obj1 &gt;&gt; obj2</code></td>
+                                <td>Побитовый сдвиг вправо</td>
+                            </tr>
+                            <tr>
+                                <td><code>__iand__</code></td>
+                                <td><code>obj &amp;= value</code></td>
+                                <td>Побитовое И и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__ior__</code></td>
+                                <td><code>obj |= value</code></td>
+                                <td>Побитовое ИЛИ и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__ixor__</code></td>
+                                <td><code>obj ^= value</code></td>
+                                <td>Побитовое исключающее ИЛИ и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__ilshift__</code></td>
+                                <td><code>obj &lt;&lt;= value</code></td>
+                                <td>Сдвиг влево и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__irshift__</code></td>
+                                <td><code>obj &gt;&gt;= value</code></td>
+                                <td>Сдвиг вправо и присваивание</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Индексирование и срезы</strong></td>
                             </tr>
                             <tr>
                                 <td><code>__getitem__</code></td>
                                 <td><code>obj[key]</code></td>
-                                <td>Доступ по индексу</td>
+                                <td>Получение элемента</td>
                             </tr>
                             <tr>
-                                <td><code>__iter__</code>, <code>__next__</code></td>
-                                <td><code>for x in obj</code></td>
-                                <td>Итерация</td>
+                                <td><code>__setitem__</code></td>
+                                <td><code>obj[key] = value</code></td>
+                                <td>Установка элемента</td>
+                            </tr>
+                            <tr>
+                                <td><code>__delitem__</code></td>
+                                <td><code>del obj[key]</code></td>
+                                <td>Удаление элемента</td>
+                            </tr>
+                            <tr>
+                                <td><code>__missing__</code></td>
+                                <td><code>obj[key]</code> (когда ключ не найден)</td>
+                                <td>Обработка отсутствующего ключа</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Размер и контейнеры</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__len__</code></td>
+                                <td><code>len(obj)</code></td>
+                                <td>Длина объекта</td>
+                            </tr>
+                            <tr>
+                                <td><code>__length_hint__</code></td>
+                                <td><code>operator.length_hint(obj)</code></td>
+                                <td>Подсказка о длине</td>
                             </tr>
                             <tr>
                                 <td><code>__contains__</code></td>
@@ -355,9 +580,56 @@ print(r.describe())   # Фигура с площадью 24.00</code></pre>
                                 <td>Проверка вхождения</td>
                             </tr>
                             <tr>
+                                <td colspan="3"><strong>Вызов функции</strong></td>
+                            </tr>
+                            <tr>
                                 <td><code>__call__</code></td>
-                                <td><code>obj()</code></td>
-                                <td>Вызов как функции</td>
+                                <td><code>obj(...)</code></td>
+                                <td>Вызов объекта как функции</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Итерация</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__iter__</code></td>
+                                <td><code>iter(obj)</code>, <code>for x in obj</code></td>
+                                <td>Получение итератора</td>
+                            </tr>
+                            <tr>
+                                <td><code>__next__</code></td>
+                                <td><code>next(iterator)</code></td>
+                                <td>Получение следующего элемента</td>
+                            </tr>
+                            <tr>
+                                <td><code>__reversed__</code></td>
+                                <td><code>reversed(obj)</code></td>
+                                <td>Получение обратного итератора</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Контекстные менеджеры</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__enter__</code></td>
+                                <td><code>with obj: ...</code> (вход)</td>
+                                <td>Вход в контекст</td>
+                            </tr>
+                            <tr>
+                                <td><code>__exit__</code></td>
+                                <td><code>with obj: ...</code> (выход)</td>
+                                <td>Выход из контекста</td>
+                            </tr>
+                            <tr>
+                                <td><code>__aenter__</code></td>
+                                <td><code>async with obj: ...</code> (вход)</td>
+                                <td>Асинхронное вхождение в контекст</td>
+                            </tr>
+                            <tr>
+                                <td><code>__aexit__</code></td>
+                                <td><code>async with obj: ...</code> (выход)</td>
+                                <td>Асинхронное выхождение из контекста</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Логические значения и хеш</strong></td>
                             </tr>
                             <tr>
                                 <td><code>__bool__</code></td>
@@ -370,9 +642,93 @@ print(r.describe())   # Фигура с площадью 24.00</code></pre>
                                 <td>Хеш для словарей/множеств</td>
                             </tr>
                             <tr>
-                                <td><code>__enter__</code>, <code>__exit__</code></td>
-                                <td><code>with obj:</code></td>
-                                <td>Контекстный менеджер</td>
+                                <td colspan="3"><strong>Управление атрибутами</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__getattr__</code></td>
+                                <td><code>obj.attr</code> (когда атрибут не найден)</td>
+                                <td>Получение несуществующего атрибута</td>
+                            </tr>
+                            <tr>
+                                <td><code>__setattr__</code></td>
+                                <td><code>obj.attr = value</code></td>
+                                <td>Установка атрибута</td>
+                            </tr>
+                            <tr>
+                                <td><code>__delattr__</code></td>
+                                <td><code>del obj.attr</code></td>
+                                <td>Удаление атрибута</td>
+                            </tr>
+                            <tr>
+                                <td><code>__getattribute__</code></td>
+                                <td><code>obj.attr</code> (всегда вызывается)</td>
+                                <td>Получение любого атрибута</td>
+                            </tr>
+                            <tr>
+                                <td><code>__dir__</code></td>
+                                <td><code>dir(obj)</code></td>
+                                <td>Список атрибутов</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Асинхронные операции</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__await__</code></td>
+                                <td><code>await obj</code></td>
+                                <td>Асинхронное ожидание</td>
+                            </tr>
+                            <tr>
+                                <td><code>__aiter__</code></td>
+                                <td><code>async for x in obj</code></td>
+                                <td>Асинхронный итератор</td>
+                            </tr>
+                            <tr>
+                                <td><code>__anext__</code></td>
+                                <td><code>async for x in obj</code></td>
+                                <td>Следующий элемент асинхронного итератора</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Управление памятью и методы для метаклассов</strong></td>
+                            </tr>
+                            <tr>
+                                <td><code>__sizeof__</code></td>
+                                <td><code>sys.getsizeof(obj)</code></td>
+                                <td>Размер объекта в памяти</td>
+                            </tr>
+                            <tr>
+                                <td><code>__class_getitem__</code></td>
+                                <td><code>MyClass[int]</code> (для типов)</td>
+                                <td>Параметризация типа</td>
+                            </tr>
+                            <tr>
+                                <td><code>__reduce__</code></td>
+                                <td><code>pickle.dumps(obj)</code></td>
+                                <td>Сериализация объекта</td>
+                            </tr>
+                            <tr>
+                                <td><code>__reduce_ex__</code></td>
+                                <td><code>pickle.dumps(obj)</code> (расширенная версия)</td>
+                                <td>Расширенная сериализация</td>
+                            </tr>
+                            <tr>
+                                <td><code>__getnewargs__</code></td>
+                                <td>Pickle при десериализации</td>
+                                <td>Аргументы для __new__ при распаковке</td>
+                            </tr>
+                            <tr>
+                                <td><code>__getnewargs_ex__</code></td>
+                                <td>Pickle при десериализации</td>
+                                <td>Расширенные аргументы для __new__</td>
+                            </tr>
+                            <tr>
+                                <td><code>__getstate__</code></td>
+                                <td>Pickle</td>
+                                <td>Получение состояния для сохранения</td>
+                            </tr>
+                            <tr>
+                                <td><code>__setstate__</code></td>
+                                <td>Pickle</td>
+                                <td>Восстановление состояния из сохранённого</td>
                             </tr>
                         </tbody>
                     </table>
@@ -596,280 +952,6 @@ print(f"Сумма: {total}")
             </div>
         </section>
 
-        <!-- ПОЛИМОРФИЗМ -->
-        <section id="polymorphism" class="section">
-            <h2>Полиморфизм</h2>
-            <p>Полиморфизм (<em>от греч. «многоформность»</em>) — способность объектов разных типов реагировать
-                на один и тот же интерфейс. В Python полиморфизм достигается через <strong>переопределение методов</strong>,
-                <strong>утиную типизацию</strong> и <strong>абстрактные классы</strong>.</p>
-
-            <div class="important">
-                <h3>Утиная типизация</h3>
-                <p>«Если это выглядит как утка, крякает как утка — это утка.» Python не требует явного наследования;
-                    достаточно, чтобы объект поддерживал нужный интерфейс (имел нужные методы/атрибуты).</p>
-            </div>
-
-            <div class="example-box">
-                <h4>Полиморфизм через переопределение методов</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">class Shape:
-    def area(self):
-        raise NotImplementedError
-
-    def perimeter(self):
-        raise NotImplementedError
-
-    def describe(self):
-        return (
-            f"{type(self).__name__}: "
-            f"площадь={self.area():.2f}, "
-            f"периметр={self.perimeter():.2f}"
-        )
-
-
-class Circle(Shape):
-    def __init__(self, r):
-        self.r = r
-
-    def area(self):
-        import math
-        return math.pi * self.r ** 2
-
-    def perimeter(self):
-        import math
-        return 2 * math.pi * self.r
-
-
-class Rectangle(Shape):
-    def __init__(self, w, h):
-        self.w = w
-        self.h = h
-
-    def area(self):
-        return self.w * self.h
-
-    def perimeter(self):
-        return 2 * (self.w + self.h)
-
-
-class Triangle(Shape):
-    def __init__(self, a, b, c):
-        self.a, self.b, self.c = a, b, c
-
-    def area(self):
-        s = self.perimeter() / 2
-        return (s * (s - self.a) * (s - self.b) * (s - self.c)) ** 0.5
-
-    def perimeter(self):
-        return self.a + self.b + self.c
-
-
-shapes = [Circle(5), Rectangle(4, 6), Triangle(3, 4, 5)]
-
-for shape in shapes:
-    print(shape.describe())
-# Circle: площадь=78.54, периметр=31.42
-# Rectangle: площадь=24.00, периметр=20.00
-# Triangle: площадь=6.00, периметр=12.00</code></pre>
-            </div>
-
-            <h3>Утиная типизация на практике</h3>
-
-            <div class="example-box">
-                <h4>Без общего родителя — полиморфизм через интерфейс</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">class PDFReport:
-    def render(self):
-        return "Рендеринг PDF"
-
-
-class HTMLReport:
-    def render(self):
-        return "Рендеринг HTML"
-
-
-class ConsoleReport:
-    def render(self):
-        return "Вывод в консоль"
-
-
-def print_all_reports(reports):
-    for report in reports:
-        print(report.render())
-
-
-reports = [PDFReport(), HTMLReport(), ConsoleReport()]
-print_all_reports(reports)
-# Рендеринг PDF
-# Рендеринг HTML
-# Вывод в консоль</code></pre>
-            </div>
-
-            <h3>Абстрактные классы</h3>
-            <p>Модуль <code>abc</code> позволяет объявить интерфейс явно: абстрактный класс нельзя создать,
-                не реализовав все его абстрактные методы.</p>
-
-            <div class="example-box">
-                <h4>Использование ABC и abstractmethod</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">from abc import ABC, abstractmethod
-
-
-class Serializable(ABC):
-    @abstractmethod
-    def serialize(self) -> str:
-        """Преобразует объект в строку."""
-
-    @abstractmethod
-    def deserialize(self, data: str):
-        """Восстанавливает объект из строки."""
-
-    def save_to_file(self, path: str):
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(self.serialize())
-
-
-class JSONUser(Serializable):
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
-
-    def serialize(self) -> str:
-        import json
-        return json.dumps({"name": self.name, "age": self.age})
-
-    def deserialize(self, data: str):
-        import json
-        d = json.loads(data)
-        self.name = d["name"]
-        self.age = d["age"]
-        return self
-
-
-user = JSONUser("Алиса", 30)
-print(user.serialize())  # {"name": "\u0410\u043b\u0438\u0441\u0430", "age": 30}
-
-# Попытка создать экземпляр ABC вызовет TypeError:
-# s = Serializable()  # TypeError: Can't instantiate abstract class</code></pre>
-            </div>
-
-            <div class="note">
-                <h4>Проверка реализации интерфейса</h4>
-                <p><code>isinstance(obj, Serializable)</code> вернёт <code>True</code>, если класс объекта
-                    наследует <code>Serializable</code> и реализует все абстрактные методы. Это позволяет
-                    строить надёжные, самодокументирующиеся интерфейсы.</p>
-            </div>
-        </section>
-
-        <!-- ИНКАПСУЛЯЦИЯ -->
-        <section id="encapsulation" class="section">
-            <h2>Инкапсуляция</h2>
-            <p>Инкапсуляция — сокрытие внутренней реализации объекта и предоставление контролируемого
-                доступа к данным через публичный интерфейс. В Python используется соглашение об именовании
-                и механизм <em>name mangling</em>.</p>
-
-            <div class="important">
-                <h3>Уровни доступа в Python</h3>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Именование</th>
-                                <th>Уровень</th>
-                                <th>Описание</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><code>attr</code></td>
-                                <td>Публичный</td>
-                                <td>Доступен всем</td>
-                            </tr>
-                            <tr>
-                                <td><code>_attr</code></td>
-                                <td>Защищённый (условно)</td>
-                                <td>Соглашение: «только для внутреннего использования»</td>
-                            </tr>
-                            <tr>
-                                <td><code>__attr</code></td>
-                                <td>Приватный (name mangling)</td>
-                                <td>Python переименует в <code>_ClassName__attr</code></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="example-box">
-                <h4>Одинарное и двойное подчёркивание</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">class BankAccount:
-    def __init__(self, owner, balance):
-        self.owner = owner          # публичный
-        self._transaction_log = []  # защищённый (соглашение)
-        self.__balance = balance    # приватный (name mangling)
-
-    def deposit(self, amount):
-        if amount &lt;= 0:
-            raise ValueError("Сумма должна быть положительной")
-        self.__balance += amount
-        self._transaction_log.append(f"+{amount}")
-
-    def withdraw(self, amount):
-        if amount &lt;= 0:
-            raise ValueError("Сумма должна быть положительной")
-        if amount &gt; self.__balance:
-            raise ValueError("Недостаточно средств")
-        self.__balance -= amount
-        self._transaction_log.append(f"-{amount}")
-
-    def get_balance(self):
-        return self.__balance
-
-    def __repr__(self):
-        return f"BankAccount({self.owner!r}, balance={self.__balance})"
-
-
-acc = BankAccount("Алиса", 1000)
-acc.deposit(500)
-acc.withdraw(200)
-
-print(acc.get_balance())        # 1300
-print(acc._transaction_log)     # ['+500', '-200']
-
-# acc.__balance                 # AttributeError!
-print(acc._BankAccount__balance)  # 1300 — можно обойти, но не нужно</code></pre>
-            </div>
-
-            <div class="common-mistake">
-                <h4>Python не имеет настоящей приватности</h4>
-                <p>Name mangling (<code>__attr</code> → <code>_ClassName__attr</code>) — это защита от случайных
-                    коллизий при наследовании, а не полноценная инкапсуляция. Технически атрибут
-                    <code>__balance</code> можно прочитать как <code>_BankAccount__balance</code>.
-                    Инкапсуляция в Python — это соглашение, которое разработчики уважают, а не языковое ограничение.</p>
-            </div>
-
-            <h3>Слоты (<code>__slots__</code>)</h3>
-            <p><code>__slots__</code> явно ограничивает набор атрибутов экземпляра, экономит память и
-                ускоряет доступ к атрибутам за счёт отказа от внутреннего словаря <code>__dict__</code>.</p>
-
-            <div class="example-box">
-                <h4>Использование __slots__</h4>
-                <pre class="line-numbers match-braces"><code class="language-python">class Point:
-    __slots__ = ("x", "y")
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def distance(self):
-        return (self.x ** 2 + self.y ** 2) ** 0.5
-
-
-p = Point(3, 4)
-print(p.distance())  # 5.0
-
-# p.z = 10  # AttributeError: 'Point' object has no attribute 'z'
-# print(p.__dict__)  # AttributeError: 'Point' object has no attribute '__dict__'</code></pre>
-            </div>
-        </section>
-
         <!-- МЕТОДЫ КЛАССА И СТАТИЧЕСКИЕ МЕТОДЫ -->
         <section id="class-static" class="section">
             <h2>Методы класса и статические методы</h2>
@@ -1049,6 +1131,312 @@ print(t)            # 100°C / 212.0°F / 373.15K
 
 t.fahrenheit = 32
 print(t)            # 0.0°C / 32.0°F / 273.15K</code></pre>
+            </div>
+        </section>
+
+        <!-- НАСЛЕДОВАНИЕ -->
+        <section id="inheritance" class="section">
+            <h2>Наследование и <code>super()</code></h2>
+            <p>Наследование позволяет создать новый класс (<strong>дочерний</strong>) на основе существующего
+                (<strong>родительского</strong>), переиспользуя и расширяя его функциональность.</p>
+
+            <div class="syntax-block">
+                <pre><code>class Дочерний(Родительский):
+    def __init__(self, ...):
+        super().__init__(...)  # вызов __init__ родителя
+        self.доп_атрибут = ...</code></pre>
+            </div>
+
+            <div class="example-box">
+                <h4>Базовый пример: животные</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Animal:
+    def __init__(self, name, sound):
+        self.name = name
+        self.sound = sound
+
+    def speak(self):
+        return f"{self.name} говорит: {self.sound}"
+
+    def __str__(self):
+        return f"Animal({self.name!r})"
+
+
+class Dog(Animal):
+    def __init__(self, name):
+        super().__init__(name, "Гав!")
+        self.tricks = []
+
+    def learn_trick(self, trick):
+        self.tricks.append(trick)
+        return f"{self.name} научился: {trick}"
+
+
+class Cat(Animal):
+    def __init__(self, name, indoor=True):
+        super().__init__(name, "Мяу!")
+        self.indoor = indoor
+
+
+rex = Dog("Рекс")
+print(rex.speak())              # Рекс говорит: Гав!
+print(rex.learn_trick("сидеть"))  # Рекс научился: сидеть
+
+whiskers = Cat("Усатик")
+print(whiskers.speak())         # Усатик говорит: Мяу!</code></pre>
+            </div>
+
+            <h3>Проверка принадлежности к классу</h3>
+
+            <div class="example-box">
+                <h4>isinstance и issubclass</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">print(isinstance(rex, Dog))    # True
+print(isinstance(rex, Animal)) # True — Dog наследует Animal
+print(isinstance(rex, Cat))    # False
+
+print(issubclass(Dog, Animal)) # True
+print(issubclass(Cat, Animal)) # True
+print(issubclass(Dog, Cat))    # False</code></pre>
+            </div>
+
+            <h3>Множественное наследование</h3>
+            <p>Python поддерживает множественное наследование. Порядок разрешения методов определяется алгоритмом
+                <strong>MRO</strong> (Method Resolution Order) — линеаризацией C3.</p>
+
+            <div class="example-box">
+                <h4>Множественное наследование и MRO</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Flyable:
+    def move(self):
+        return "Лечу"
+
+    def describe(self):
+        return "Умею летать"
+
+
+class Swimmable:
+    def move(self):
+        return "Плыву"
+
+    def describe(self):
+        return "Умею плавать"
+
+
+class Duck(Flyable, Swimmable):
+    def quack(self):
+        return "Кря!"
+
+
+donald = Duck()
+print(donald.move())     # Лечу — Flyable идёт первым в MRO
+print(donald.quack())    # Кря!
+
+print(Duck.__mro__)
+# (&lt;class 'Duck'&gt;, &lt;class 'Flyable'&gt;, &lt;class 'Swimmable'&gt;, &lt;class 'object'&gt;)</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Зачем <code>super()</code>, а не прямой вызов родителя?</h4>
+                <p><code>super()</code> корректно следует MRO, что особенно важно при множественном наследовании.
+                    Прямой вызов <code>Animal.__init__(self, ...)</code> может привести к пропуску инициализации
+                    одного из классов в цепочке.</p>
+            </div>
+
+            <h3>Переопределение методов</h3>
+
+            <div class="example-box">
+                <h4>Overriding — замена поведения родителя</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Shape:
+    def area(self):
+        raise NotImplementedError("Подкласс должен реализовать area()")
+
+    def describe(self):
+        return f"Фигура с площадью {self.area():.2f}"
+
+
+class Circle(Shape):
+    def __init__(self, radius):
+        self.radius = radius
+
+    def area(self):
+        import math
+        return math.pi * self.radius ** 2
+
+
+class Rectangle(Shape):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+
+c = Circle(5)
+r = Rectangle(4, 6)
+
+print(c.describe())   # Фигура с площадью 78.54
+print(r.describe())   # Фигура с площадью 24.00</code></pre>
+            </div>
+        </section>
+
+        <!-- ПОЛИМОРФИЗМ -->
+        <section id="polymorphism" class="section">
+            <h2>Полиморфизм</h2>
+            <p>Полиморфизм (<em>от греч. «многоформность»</em>) — способность объектов разных типов реагировать
+                на один и тот же интерфейс. В Python полиморфизм достигается через <strong>переопределение методов</strong>,
+                <strong>утиную типизацию</strong> и <strong>абстрактные классы</strong>.</p>
+
+            <div class="important">
+                <h3>Утиная типизация</h3>
+                <p>«Если это выглядит как утка, крякает как утка — это утка.» Python не требует явного наследования;
+                    достаточно, чтобы объект поддерживал нужный интерфейс (имел нужные методы/атрибуты).</p>
+            </div>
+
+            <div class="example-box">
+                <h4>Полиморфизм через переопределение методов</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class Shape:
+    def area(self):
+        raise NotImplementedError
+
+    def perimeter(self):
+        raise NotImplementedError
+
+    def describe(self):
+        return (
+            f"{type(self).__name__}: "
+            f"площадь={self.area():.2f}, "
+            f"периметр={self.perimeter():.2f}"
+        )
+
+
+class Circle(Shape):
+    def __init__(self, r):
+        self.r = r
+
+    def area(self):
+        import math
+        return math.pi * self.r ** 2
+
+    def perimeter(self):
+        import math
+        return 2 * math.pi * self.r
+
+
+class Rectangle(Shape):
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+
+    def area(self):
+        return self.w * self.h
+
+    def perimeter(self):
+        return 2 * (self.w + self.h)
+
+
+class Triangle(Shape):
+    def __init__(self, a, b, c):
+        self.a, self.b, self.c = a, b, c
+
+    def area(self):
+        s = self.perimeter() / 2
+        return (s * (s - self.a) * (s - self.b) * (s - self.c)) ** 0.5
+
+    def perimeter(self):
+        return self.a + self.b + self.c
+
+
+shapes = [Circle(5), Rectangle(4, 6), Triangle(3, 4, 5)]
+
+for shape in shapes:
+    print(shape.describe())
+# Circle: площадь=78.54, периметр=31.42
+# Rectangle: площадь=24.00, периметр=20.00
+# Triangle: площадь=6.00, периметр=12.00</code></pre>
+            </div>
+
+            <h3>Утиная типизация на практике</h3>
+
+            <div class="example-box">
+                <h4>Без общего родителя — полиморфизм через интерфейс</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">class PDFReport:
+    def render(self):
+        return "Рендеринг PDF"
+
+
+class HTMLReport:
+    def render(self):
+        return "Рендеринг HTML"
+
+
+class ConsoleReport:
+    def render(self):
+        return "Вывод в консоль"
+
+
+def print_all_reports(reports):
+    for report in reports:
+        print(report.render())
+
+
+reports = [PDFReport(), HTMLReport(), ConsoleReport()]
+print_all_reports(reports)
+# Рендеринг PDF
+# Рендеринг HTML
+# Вывод в консоль</code></pre>
+            </div>
+
+            <h3>Абстрактные классы</h3>
+            <p>Модуль <code>abc</code> позволяет объявить интерфейс явно: абстрактный класс нельзя создать,
+                не реализовав все его абстрактные методы.</p>
+
+            <div class="example-box">
+                <h4>Использование ABC и abstractmethod</h4>
+                <pre class="line-numbers match-braces"><code class="language-python">from abc import ABC, abstractmethod
+
+
+class Serializable(ABC):
+    @abstractmethod
+    def serialize(self) -> str:
+        """Преобразует объект в строку."""
+
+    @abstractmethod
+    def deserialize(self, data: str):
+        """Восстанавливает объект из строки."""
+
+    def save_to_file(self, path: str):
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(self.serialize())
+
+
+class JSONUser(Serializable):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def serialize(self) -> str:
+        import json
+        return json.dumps({"name": self.name, "age": self.age})
+
+    def deserialize(self, data: str):
+        import json
+        d = json.loads(data)
+        self.name = d["name"]
+        self.age = d["age"]
+        return self
+
+
+user = JSONUser("Алиса", 30)
+print(user.serialize())  # {"name": "\u0410\u043b\u0438\u0441\u0430", "age": 30}
+
+# Попытка создать экземпляр ABC вызовет TypeError:
+# s = Serializable()  # TypeError: Can't instantiate abstract class</code></pre>
+            </div>
+
+            <div class="note">
+                <h4>Проверка реализации интерфейса</h4>
+                <p><code>isinstance(obj, Serializable)</code> вернёт <code>True</code>, если класс объекта
+                    наследует <code>Serializable</code> и реализует все абстрактные методы. Это позволяет
+                    строить надёжные, самодокументирующиеся интерфейсы.</p>
             </div>
         </section>
 
