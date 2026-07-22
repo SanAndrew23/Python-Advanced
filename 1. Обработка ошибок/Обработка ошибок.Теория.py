@@ -183,3 +183,25 @@ except InsufficientFundsError as e:
     print(f'Ошибка {e}')
     print(f'Текущий баланс: {e.balance}')'''
 
+#7.3 Иерархия собственных исключений. Ловим все ошибки приложения одним except
+'''class AppError(Exception):
+    #Базовое исключение
+    pass
+
+class DatabaseError(AppError):
+    #Ошибка при работе с базой данных
+    pass
+
+class NetworkError(AppError):
+    #Ошибка сети
+    pass
+
+class TimeoutError(NetworkError):
+    #Превышено время ожидания
+    pass
+
+try:
+    raise TimeoutError('Сервер не отвечает')
+except AppError as e:
+    print(f'Ошибка приложения: {e}')
+    print(f'Тип: {type(e).__name__}')'''

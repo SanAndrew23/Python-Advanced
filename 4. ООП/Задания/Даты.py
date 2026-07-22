@@ -6,12 +6,12 @@ class Date:
 
     def set_from_str(self, date):
         date = date.split('.')
-        self.day = date[0]
-        self.month = date[1]
-        self.year = date[2]
+        self.day = int(date[0])
+        self.month = int(date[1])
+        self.year = int(date[2])
 
-    def print(self):
-        print(f'{self.day}.{self.month}.{self.year}')
+    def __str__(self):
+        return f'{self.day}.{self.month}.{self.year}'
 
     def add_day(self):
         lst = [1, 3, 5, 7, 8, 9, 11]
@@ -26,12 +26,14 @@ class Date:
         else:
             max_d = 31
         self.day += 1
-        if self.day > max_d:
+        if self.day >= max_d:
             self.day = 1
             self.month += 1
             if self.month > 12:
                 self.month = 1
                 self.year += 1
 date = Date()
-date.set_from_str('14.06.2025')
-date.print()
+date.set_from_str('31.12.2028')
+print(date)
+date.add_day()
+print(date)
