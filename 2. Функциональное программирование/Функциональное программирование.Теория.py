@@ -9,6 +9,7 @@ square_lambda = lambda x: x ** 2
 print(square(5))
 print(square(5))
 '''
+from enum import unique
 
 #1.2 Lambda с несколькими аргументами
 '''
@@ -36,7 +37,7 @@ for s in sorted_students:
 Для сложной логики следует использовать обычные функции через def'''
 
 
-#2.1 map, filter, reduce
+#2 map, filter, reduce
 '''map применяет функцию каждому элементу итерируемого объекта и возвращает итератор с результатами.'''
 '''Примеры'''
 '''numbers = [1, 2, 3, 4, 5]
@@ -86,3 +87,57 @@ print(max_val)
 total_with_start = reduce(lambda acc, x: acc + x, numbers, 100)
 print(total_with_start)
 '''
+
+#3 Генераторы словарей и множеств(Comprehensions)
+#3.1 Генератор списков
+'''
+squares = [x ** 2 for x in range(1, 8)]
+print(squares)
+
+evens = [x for x in range(0, 20) if x % 2 == 0]
+print(evens)
+
+words = ['hello', 'world', 'python']
+upper = [x.upper() for x in words if len(x) > 4]
+print(upper)
+
+pairs = [(x, y) for x in range(1, 4) for y in range(1, 4) if x != y]
+print(pairs)
+'''
+
+#3.2 Генератор словарей
+'''
+squares_dict = {x: x ** 2 for x in range(1, 6)}
+print(squares_dict)
+
+words = ['apple', 'banana', 'cherry']
+lengths = {word: len(word) for word in words}
+print(lengths)
+
+original = {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+filtered = {k: v for k, v in original.items() if v > 2}
+print(filtered)
+'''
+
+#3.3 Генератор множеств
+'''
+numbers = {1, 2, 2, 2, 3, 3, 4, 5, 5}
+unique_squares = {x ** 2 for x in numbers}
+print(unique_squares)
+
+words = ["hello", "world", "hi", "python", "py"]
+short_upper = {x.upper() for x in words if len(x) <= 3}
+print(short_upper)
+
+sentence = "the quick brown fox jumps over the lazy dog"
+unique_chars = {letter for letter in sentence if letter != ' '}
+print(len(unique_chars))
+'''
+
+#3.4 Вложенные comprehensions
+
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+flat = [num for row in matrix for num in row]
+print(flat)
+transposed = [[row[element] for row in matrix] for element in range(3)]
+print(transposed)
