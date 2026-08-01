@@ -134,10 +134,95 @@ unique_chars = {letter for letter in sentence if letter != ' '}
 print(len(unique_chars))
 '''
 
-#3.4 Вложенные comprehensions
-
+#3.4 Вложенные comprehension
+'''
 matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 flat = [num for row in matrix for num in row]
 print(flat)
 transposed = [[row[element] for row in matrix] for element in range(3)]
 print(transposed)
+'''
+
+#4.1 Генераторы и yield
+#Пример простого генератора
+'''
+def count_up(n):
+    i = 1
+    while i <= n:
+        yield i
+        i += 1
+
+gen = count_up(5)
+print(next(gen))
+print(next(gen))
+print(next(gen))
+
+for i in count_up(5):
+    print(i, end = ' ')
+'''
+
+#Обычная функция хранит все в памяти, а генератор вычисляет по одному
+#4.2 Генераторное выражение
+'''
+list_comp = [x ** 2 for x in range(10)]
+gen_comp = (x ** 2 for x in range(10))
+
+print(type(list_comp))
+print(type(gen_comp))
+'''
+
+#4.3 yield from
+'''
+def chain(*iterables):
+    for it in iterables:
+        yield from it
+
+result = list(chain([1, 2, 3], 'abs', range(4, 7)))
+print(result)
+'''
+
+#4.4 Бесконечные генераторы
+'''
+#Бесконечная последовательность Фибоначчи
+def fibonacci():
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+fib = fibonacci()
+first_10 = [next(fib) for i in range(10)]
+print(first_10)
+
+#Конвейер из генераторов
+def read_numbers(data):
+    for n in data:
+        yield n
+
+def filter_even(numbers):
+    for n in numbers:
+        if n % 2 == 0:
+            yield n
+
+def square(numbers):
+    for n in numbers:
+        yield n ** 2
+
+data = range(1, 11)
+pipeline = square(filter_even(read_numbers(data)))
+print(list(pipeline))
+'''
+
+#4.5* Протокол итератора
+'''
+def simple():
+    yield 1
+    yield 2
+
+gen = simple()
+print(next(gen))
+print(next(gen))
+print(next(gen))
+'''
+
+#5.1 Итераторы
