@@ -9,7 +9,6 @@ square_lambda = lambda x: x ** 2
 print(square(5))
 print(square(5))
 '''
-from enum import unique
 
 #1.2 Lambda с несколькими аргументами
 '''
@@ -226,3 +225,152 @@ print(next(gen))
 '''
 
 #5.1 Итераторы
+#Итератор — это объект, реализующий протокол итератора: методы __iter__() и __next__().
+#Он позволяет последовательно перебирать элементы коллекции, не загружая их все в память сразу.
+#Итератор квадратов чисел
+
+'''
+numbers = [1, 2, 3]
+it = iter(numbers)
+print(next(it))
+print(next(it))
+print(next(it))
+'''
+
+'''
+class SquareIterator():
+    def __init__(self, n):
+        self.n = n
+        self.current = 1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current > self.n:
+            raise StopIteration
+        else:
+            result = self.current ** 2
+            self.current += 1
+            return result
+
+for sq in SquareIterator(5):
+    print(sq, end=' ')
+
+print()
+
+class Range:
+    def __init__(self, start, stop, step=1):
+        self.current = start
+        self.stop = stop
+        self.step = step
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current >= self.stop:
+            raise StopIteration
+        value = self.current
+        self.current += self.step
+        return value
+
+print(list(Range(0, 10, 2)))
+'''
+
+'''
+class NumberCollection:
+    def __init__(self, data):
+        self.data = data
+
+    def __iter__(self):
+        return NumberIterator(self.data)
+
+class NumberIterator:
+    def __init__(self, data):
+        self.data = data
+        self.index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index > len(self.data):
+            raise StopIteration
+        value = self.data[self.index]
+        self.index += 1
+        return value
+
+col = NumberCollection([10, 20, 30])
+
+it1 = iter(col)
+it2 = iter(col)
+
+print(next(it1))
+print(next(it1))
+print(next(it2))
+'''
+
+#5.2 Встроенные функции для итерируемых объектов
+'''
+all - True когда верно все
+any - True когда верно хотя бы одно
+'''
+
+'''
+nums = [2, 4, 6, 8]
+print(all(x % 2 == 0 for x in nums))
+print(any(x > 5 for x in nums))
+'''
+
+'''
+enumerate - возвращает итератор пар(индекс: значение)
+Параметр start задаёт начальный индекс
+'''
+
+'''
+fruits = ['apple', 'banana', 'orange']
+for index, fruit in enumerate(fruits, start=1):
+    print(f'{index}: {fruit}')
+'''
+
+'''
+zip - определяет элементы в кортежи, останавливает по кратчайшему, при strict = True выбрасывает ошибку, если длины отличаются
+'''
+
+'''
+names = ['Ivan', 'Artur', 'Artem']
+scores = [88, 77, 99]
+
+for a, b in zip(names, scores):
+    print(f'{a}: {b}')
+'''
+
+'''
+nums = [1, 2, 3, 4, 5]
+for i in reversed(nums):
+    print(i)
+for i in reversed('Python'):
+    print(i, end='')
+'''
+
+'''
+Iter(object[, sentinel]) - возвращает итератор для объекта. В форме с двумя аргументами вызывает object() до тех пор,
+пока результат не совпадёт с sentinel.
+next(iterator[, default]) - возвращает следующий элемент итератора. 
+Если итератор исчерпан и указан default — возвращает его вместо StopIteration.
+'''
+
+'''
+data = [10, 20, 30]
+it = iter(data)
+print(next(it))
+print(next(it))
+print(next(it, 'end'))
+print(next(it, 'end'))
+
+import random
+random.seed(42)
+it = iter(lambda: random.randint(1, 6), 6)
+print(list(it))
+'''

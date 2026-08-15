@@ -1,6 +1,3 @@
-from pkgutil import resolve_name
-
-
 class Matrix:
     def __init__(self, rows=0, cols=0, *, data=None):
         if data is None:
