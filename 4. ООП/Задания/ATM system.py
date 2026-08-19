@@ -13,7 +13,7 @@ class Money:
 
     @property
     def balance(self):
-       pass
+       return sum(nom * count for nom, count in self.cash.items())
 
     def __add__(self, other):
         '''
