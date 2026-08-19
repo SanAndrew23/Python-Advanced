@@ -1,6 +1,3 @@
-from pkgutil import resolve_name
-
-
 class Matrix:
     def __init__(self, rows=0, cols=0, *, data=None):
         if data is None:
@@ -70,6 +67,7 @@ class Matrix:
 
 matrix1 = Matrix(data=[[1, 2], [4, 5]])
 matrix2 = Matrix(data=[[7, 8], [10, 11]])
+
 try:
     print(matrix1 + matrix2)
     print()
